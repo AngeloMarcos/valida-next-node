@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, FileText, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, FileText, LogOut, Building2, Package } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -21,6 +21,11 @@ const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Clientes", url: "/clientes", icon: Users },
   { title: "Propostas", url: "/propostas", icon: FileText },
+];
+
+const financialItems = [
+  { title: "Bancos", url: "/bancos", icon: Building2 },
+  { title: "Produtos", url: "/produtos", icon: Package },
 ];
 
 export function AppSidebar() {
@@ -51,10 +56,31 @@ export function AppSidebar() {
         </div>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
+          <SidebarGroupLabel>CRM</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild isActive={currentPath === item.url}>
+                    <NavLink
+                      to={item.url}
+                      className="flex items-center gap-3 hover:bg-sidebar-accent"
+                    >
+                      <item.icon className="h-4 w-4" />
+                      {!collapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>FINANCEIRO</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {financialItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={currentPath === item.url}>
                     <NavLink

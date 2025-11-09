@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { StatCard } from "@/components/StatCard";
-import { Users, FileText, CheckCircle, DollarSign } from "lucide-react";
+import { Users, FileText, CheckCircle, DollarSign, FileSearch, TrendingUp } from "lucide-react";
 import { api, DashboardStats } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -64,11 +64,36 @@ export default function Dashboard() {
             trend={{ value: 8, isPositive: true }}
           />
           <StatCard
+            title="Propostas em Análise"
+            value={stats?.inAnalysisProposals || 0}
+            icon={FileSearch}
+            description="Aguardando análise"
+          />
+          <StatCard
+            title="Taxa de Aprovação"
+            value={`${stats?.approvalRate || 0}%`}
+            icon={TrendingUp}
+            description="Taxa de aprovação"
+            trend={{ value: 5, isPositive: true }}
+          />
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <StatCard
             title="Propostas Aprovadas"
             value={stats?.approvedProposals || 0}
             icon={CheckCircle}
             description="Aprovadas este mês"
             trend={{ value: 15, isPositive: true }}
+          />
+          <StatCard
+            title="Ticket Médio"
+            value={new Intl.NumberFormat('pt-BR', {
+              style: 'currency',
+              currency: 'BRL',
+            }).format(stats?.avgTicket || 0)}
+            icon={DollarSign}
+            description="Valor médio aprovado"
           />
           <StatCard
             title="Valor Total"
@@ -78,6 +103,12 @@ export default function Dashboard() {
             }).format(stats?.totalAmount || 0)}
             icon={DollarSign}
             description="Em propostas ativas"
+          />
+          <StatCard
+            title="Abertas"
+            value={stats?.openProposals || 0}
+            icon={FileText}
+            description="Propostas abertas"
           />
         </div>
 
