@@ -1,0 +1,149 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("user") // admin, operador, consultor
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  proposals Proposal[]
+  activities Activity[]
+
+  @@map("users")
+}
+
+model Client {
+  id        Int      @id @default(autoincrement())
+  name      String
+  document  String   @unique // CPF ou CNPJ
+  phone     String?
+  email     String?
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  proposals Proposal[]
+  documents Document[]
+
+  @@map("clients")
+}
+
+model Bank {
+  id            Int      @id @default(autoincrement())
+  name          String
+  code          String   @unique
+  logoUrl       String?  @map("logo_url")
+  contactEmail  String?  @map("contact_email")
+  contactPhone  String?  @map("contact_phone")
+  isActive      Boolean  @default(true) @map("is_active")
+  notes         String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  products Product[]
+
+  @@map("banks")
+}
+
+model Product {
+  id              Int      @id @default(autoincrement())
+  name            String
+  type            String   // credit, consortium, financing
+  bankId          Int      @map("bank_id")
+  minAmount       Decimal  @map("min_amount") @db.Decimal(15, 2)
+  maxAmount       Decimal  @map("max_amount") @db.Decimal(15, 2)
+  minInstallments Int      @map("min_installments")
+  maxInstallments Int      @map("max_installments")
+  interestRate    Decimal  @map("interest_rate") @db.Decimal(5, 2)
+  description     String?
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  bank      Bank       @relation(fields: [bankId], references: [id])
+  proposals Proposal[]
+
+  @@map("products")
+}
+
+model Proposal {
+  id                 Int       @id @default(autoincrement())
+  title              String
+  status             String    @default("open") // open, in_analysis, approved, rejected, completed
+  clientId           Int       @map("client_id")
+  userId             Int       @map("user_id")
+  productId          Int?      @map("product_id")
+  requestedAmount    Decimal?  @map("requested_amount") @db.Decimal(15, 2)
+  approvedAmount     Decimal?  @map("approved_amount") @db.Decimal(15, 2)
+  installments       Int?
+  interestRate       Decimal?  @map("interest_rate") @db.Decimal(5, 2)
+  firstPaymentDate   DateTime? @map("first_payment_date")
+  contractNumber     String?   @map("contract_number")
+  rejectionReason    String?   @map("rejection_reason")
+  commissionPercent  Decimal?  @map("commission_percent") @db.Decimal(5, 2)
+  commissionAmount   Decimal?  @map("commission_amount") @db.Decimal(15, 2)
+  commissionStatus   String?   @map("commission_status") // pending, received
+  commissionDueDate  DateTime? @map("commission_due_date")
+  commissionPaidAt   DateTime? @map("commission_paid_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  client     Client     @relation(fields: [clientId], references: [id])
+  user       User       @relation(fields: [userId], references: [id])
+  product    Product?   @relation(fields: [productId], references: [id])
+  documents  Document[]
+  activities Activity[]
+
+  @@map("proposals")
+}
+
+model Document {
+  id          Int       @id @default(autoincrement())
+  name        String
+  fileName    String    @map("file_name")
+  fileUrl     String    @map("file_url")
+  fileSize    Int?      @map("file_size")
+  mimeType    String?   @map("mime_type")
+  status      String    @default("pending") // pending, uploaded, in_review, approved, rejected
+  clientId    Int?      @map("client_id")
+  proposalId  Int?      @map("proposal_id")
+  uploadedBy  Int?      @map("uploaded_by")
+  verifiedBy  Int?      @map("verified_by")
+  verifiedAt  DateTime? @map("verified_at")
+  notes       String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  client   Client?   @relation(fields: [clientId], references: [id])
+  proposal Proposal? @relation(fields: [proposalId], references: [id])
+
+  @@map("documents")
+}
+
+model Activity {
+  id          Int      @id @default(autoincrement())
+  type        String   // created, status_change, document, comment, call, email, meeting
+  description String
+  details     String?
+  proposalId  Int      @map("proposal_id")
+  userId      Int      @map("user_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  proposal Proposal @relation(fields: [proposalId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+
+  @@map("activities")
+}
