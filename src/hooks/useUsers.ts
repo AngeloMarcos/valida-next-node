@@ -52,8 +52,7 @@ export function useUsers() {
           nome,
           email,
           empresa_id,
-          created_at,
-          empresas!profiles_empresa_id_fkey(nome)
+          created_at
         `, { count: 'exact' })
         .eq('empresa_id', profile.empresa_id)
         .order('created_at', { ascending: false });
@@ -65,6 +64,13 @@ export function useUsers() {
       const { data: profiles, error: profilesError, count } = await query.range(from, to);
 
       if (profilesError) throw profilesError;
+
+      // Get empresa name separately
+      const { data: empresa } = await supabase
+        .from('empresas')
+        .select('nome')
+        .eq('id', profile.empresa_id)
+        .single();
 
       // Get roles for each user
       const userIds = profiles?.map(p => p.id) || [];
@@ -83,9 +89,9 @@ export function useUsers() {
           nome: profile.nome || '',
           email: profile.email,
           empresa_id: profile.empresa_id,
-          empresa_nome: (profile.empresas as any)?.nome || '',
+          empresa_nome: empresa?.nome || '',
           role: (userRole?.role as UserRole) || 'agente',
-          status: 'active' as UserStatus, // TODO: Add status field to profiles table
+          status: 'active' as UserStatus,
           created_at: profile.created_at || '',
         };
       });
