@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { authService } from "@/lib/auth";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -8,14 +8,19 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
-    if (!authService.isAuthenticated()) {
+    if (!loading && !user) {
       navigate("/login");
     }
-  }, [navigate]);
+  }, [user, loading, navigate]);
 
-  if (!authService.isAuthenticated()) {
+  if (loading) {
+    return null;
+  }
+
+  if (!user) {
     return null;
   }
 

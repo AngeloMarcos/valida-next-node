@@ -1,36 +1,97 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { authService } from "@/lib/auth";
-import { toast } from "sonner";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import * as yup from "yup";
+
+const loginSchema = yup.object({
+  email: yup.string().email("E-mail inválido").required("E-mail é obrigatório"),
+  password: yup.string().min(6, "Senha deve ter no mínimo 6 caracteres").required("Senha é obrigatória"),
+});
+
+const signupSchema = yup.object({
+  email: yup.string().email("E-mail inválido").required("E-mail é obrigatório"),
+  password: yup.string().min(6, "Senha deve ter no mínimo 6 caracteres").required("Senha é obrigatória"),
+  confirmPassword: yup.string()
+    .oneOf([yup.ref('password')], "As senhas devem ser iguais")
+    .required("Confirmação de senha é obrigatória"),
+});
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { user, signIn, signUp } = useAuth();
+  const [activeTab, setActiveTab] = useState("login");
+  
+  // Login form
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [loginErrors, setLoginErrors] = useState<any>({});
+  
+  // Signup form
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [signupLoading, setSignupLoading] = useState(false);
+  const [signupErrors, setSignupErrors] = useState<any>({});
 
   useEffect(() => {
-    if (authService.isAuthenticated()) {
+    if (user) {
       navigate("/dashboard");
     }
-  }, [navigate]);
+  }, [user, navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
+    setLoginErrors({});
+    
     try {
-      await authService.login(email, password);
-      toast.success("Login realizado com sucesso!");
+      await loginSchema.validate({ email: loginEmail, password: loginPassword }, { abortEarly: false });
+      setLoginLoading(true);
+      await signIn(loginEmail, loginPassword);
       navigate("/dashboard");
-    } catch (error) {
-      toast.error("Credenciais inválidas. Tente admin@validacrm.com / admin123");
+    } catch (error: any) {
+      if (error.inner) {
+        const errors: any = {};
+        error.inner.forEach((err: any) => {
+          errors[err.path] = err.message;
+        });
+        setLoginErrors(errors);
+      }
     } finally {
-      setIsLoading(false);
+      setLoginLoading(false);
+    }
+  };
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSignupErrors({});
+    
+    try {
+      await signupSchema.validate(
+        { email: signupEmail, password: signupPassword, confirmPassword },
+        { abortEarly: false }
+      );
+      setSignupLoading(true);
+      await signUp(signupEmail, signupPassword);
+      setActiveTab("login");
+      setSignupEmail("");
+      setSignupPassword("");
+      setConfirmPassword("");
+    } catch (error: any) {
+      if (error.inner) {
+        const errors: any = {};
+        error.inner.forEach((err: any) => {
+          errors[err.path] = err.message;
+        });
+        setSignupErrors(errors);
+      }
+    } finally {
+      setSignupLoading(false);
     }
   };
 
@@ -45,41 +106,97 @@ export default function Login() {
           </div>
           <CardTitle className="text-2xl text-center">ValidaCRM</CardTitle>
           <CardDescription className="text-center">
-            Entre com suas credenciais para acessar o sistema
+            Sistema de Gestão de Propostas
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Entrando..." : "Entrar"}
-            </Button>
-            <div className="text-sm text-center text-muted-foreground mt-4">
-              <p>Credenciais de teste:</p>
-              <p className="font-mono text-xs mt-1">admin@validacrm.com / admin123</p>
-            </div>
-          </form>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="signup">Cadastro</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="login">
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="login-email">E-mail</Label>
+                  <Input
+                    id="login-email"
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                  />
+                  {loginErrors.email && (
+                    <p className="text-sm text-destructive">{loginErrors.email}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="login-password">Senha</Label>
+                  <Input
+                    id="login-password"
+                    type="password"
+                    placeholder="••••••"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                  />
+                  {loginErrors.password && (
+                    <p className="text-sm text-destructive">{loginErrors.password}</p>
+                  )}
+                </div>
+                <Button type="submit" className="w-full" disabled={loginLoading}>
+                  {loginLoading ? "Entrando..." : "Entrar"}
+                </Button>
+              </form>
+            </TabsContent>
+            
+            <TabsContent value="signup">
+              <form onSubmit={handleSignup} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="signup-email">E-mail</Label>
+                  <Input
+                    id="signup-email"
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={signupEmail}
+                    onChange={(e) => setSignupEmail(e.target.value)}
+                  />
+                  {signupErrors.email && (
+                    <p className="text-sm text-destructive">{signupErrors.email}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-password">Senha</Label>
+                  <Input
+                    id="signup-password"
+                    type="password"
+                    placeholder="••••••"
+                    value={signupPassword}
+                    onChange={(e) => setSignupPassword(e.target.value)}
+                  />
+                  {signupErrors.password && (
+                    <p className="text-sm text-destructive">{signupErrors.password}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-password">Confirmar Senha</Label>
+                  <Input
+                    id="confirm-password"
+                    type="password"
+                    placeholder="••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                  />
+                  {signupErrors.confirmPassword && (
+                    <p className="text-sm text-destructive">{signupErrors.confirmPassword}</p>
+                  )}
+                </div>
+                <Button type="submit" className="w-full" disabled={signupLoading}>
+                  {signupLoading ? "Cadastrando..." : "Criar Conta"}
+                </Button>
+              </form>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>
