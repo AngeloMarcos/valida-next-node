@@ -49,14 +49,14 @@ export default function Propostas() {
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('');
-  const [bancoFilter, setBancoFilter] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [bancoFilter, setBancoFilter] = useState<string>('all');
 
   const loadPropostas = async (page: number = currentPage, size: number = pageSize) => {
     const filters: PropostaFilters = {
       search: searchTerm || undefined,
-      status: statusFilter || undefined,
-      banco_id: bancoFilter || undefined,
+      status: statusFilter !== 'all' ? statusFilter : undefined,
+      banco_id: bancoFilter !== 'all' ? bancoFilter : undefined,
     };
 
     const result = await fetchPropostas(page, size, filters);
@@ -130,8 +130,8 @@ export default function Propostas() {
 
   const handleClearFilters = () => {
     setSearchTerm('');
-    setStatusFilter('');
-    setBancoFilter('');
+    setStatusFilter('all');
+    setBancoFilter('all');
     setCurrentPage(1);
   };
 
@@ -179,7 +179,7 @@ export default function Propostas() {
                 <SelectValue placeholder="Todos os status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os status</SelectItem>
+                <SelectItem value="all">Todos os status</SelectItem>
                 <SelectItem value="rascunho">Rascunho</SelectItem>
                 <SelectItem value="em_analise">Em Análise</SelectItem>
                 <SelectItem value="aprovada">Aprovada</SelectItem>
@@ -193,7 +193,7 @@ export default function Propostas() {
                 <SelectValue placeholder="Todos os bancos" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os bancos</SelectItem>
+                <SelectItem value="all">Todos os bancos</SelectItem>
                 {bancos.map((banco) => (
                   <SelectItem key={banco.value} value={banco.value}>
                     {banco.label}
