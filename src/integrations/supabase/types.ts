@@ -275,40 +275,37 @@ export type Database = {
         }
         Relationships: []
       }
-      usuarios: {
+    }
+    Views: {
+      proposta_stats_by_month: {
         Row: {
-          ativo: boolean | null
-          created_at: string | null
-          email: string
+          avg_valor: number | null
+          count: number | null
           empresa_id: string | null
-          id: string
-          nome: string | null
-          role: string | null
-          senha: string | null
-        }
-        Insert: {
-          ativo?: boolean | null
-          created_at?: string | null
-          email: string
-          empresa_id?: string | null
-          id?: string
-          nome?: string | null
-          role?: string | null
-          senha?: string | null
-        }
-        Update: {
-          ativo?: boolean | null
-          created_at?: string | null
-          email?: string
-          empresa_id?: string | null
-          id?: string
-          nome?: string | null
-          role?: string | null
-          senha?: string | null
+          month: string | null
+          total_valor: number | null
         }
         Relationships: [
           {
-            foreignKeyName: "usuarios_empresa_id_fkey"
+            foreignKeyName: "propostas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proposta_stats_by_status: {
+        Row: {
+          avg_valor: number | null
+          count: number | null
+          empresa_id: string | null
+          status: string | null
+          total_valor: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "propostas_empresa_id_fkey"
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresas"
@@ -317,10 +314,58 @@ export type Database = {
         ]
       }
     }
-    Views: {
-      [_ in never]: never
-    }
     Functions: {
+      get_dashboard_kpis: { Args: { _empresa_id: string }; Returns: Json }
+      get_default_empresa_for_signup: { Args: never; Returns: string }
+      get_monthly_proposta_trends: {
+        Args: { _empresa_id: string }
+        Returns: {
+          avg_valor: number
+          count: number
+          month: string
+          total_valor: number
+        }[]
+      }
+      get_proposta_status_breakdown: {
+        Args: { _empresa_id: string }
+        Returns: {
+          avg_valor: number
+          count: number
+          percentage: number
+          status: string
+          total_valor: number
+        }[]
+      }
+      get_recent_propostas: {
+        Args: { _empresa_id: string; _limit?: number }
+        Returns: {
+          banco_nome: string
+          cliente_nome: string
+          data: string
+          id: string
+          produto_nome: string
+          status: string
+          valor: number
+        }[]
+      }
+      get_top_bancos: {
+        Args: { _empresa_id: string; _limit?: number }
+        Returns: {
+          banco_id: string
+          banco_nome: string
+          count: number
+          total_valor: number
+        }[]
+      }
+      get_top_produtos: {
+        Args: { _empresa_id: string; _limit?: number }
+        Returns: {
+          count: number
+          produto_id: string
+          produto_nome: string
+          total_valor: number
+        }[]
+      }
       get_user_empresa_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {

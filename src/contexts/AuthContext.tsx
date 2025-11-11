@@ -140,12 +140,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string, nome?: string) => {
     try {
-      // Get default empresa_id (you may want to make this configurable)
-      const { data: empresas } = await supabase
-        .from('empresas')
-        .select('id')
-        .limit(1)
-        .single();
+      // Get default empresa_id using secure function
+      const { data: empresaId } = await supabase.rpc('get_default_empresa_for_signup');
 
       const redirectUrl = `${window.location.origin}/`;
 
@@ -156,7 +152,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           emailRedirectTo: redirectUrl,
           data: {
             nome: nome || email,
-            empresa_id: empresas?.id,
+            empresa_id: empresaId,
           },
         },
       });
