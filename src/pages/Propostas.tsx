@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,14 +34,31 @@ const statusLabels = {
   reprovada: "Reprovada",
 };
 
-const proposalSchema = z.object({
-  title: z.string().min(3, "Título deve ter no mínimo 3 caracteres"),
-  status: z.enum(["aberta", "em_analise", "aprovada", "reprovada"]),
-  amount: z.string().min(1, "Valor é obrigatório"),
-  clientId: z.string().min(1, "Cliente é obrigatório"),
-});
+const proposalSchema = yup.object({
+  title: yup
+    .string()
+    .required("Título é obrigatório")
+    .min(3, "Título deve ter no mínimo 3 caracteres")
+    .max(200, "Título deve ter no máximo 200 caracteres"),
+  status: yup
+    .string()
+    .oneOf(["aberta", "em_analise", "aprovada", "reprovada"], "Status inválido")
+    .required("Status é obrigatório"),
+  amount: yup
+    .string()
+    .required("Valor é obrigatório")
+    .test("is-number", "Valor deve ser um número válido", (value) => !isNaN(Number(value)))
+    .test("is-positive", "Valor deve ser maior que zero", (value) => Number(value) > 0)
+    .test("is-decimal", "Valor deve ter no máximo 2 casas decimais", (value) => {
+      const parts = value?.split(".");
+      return !parts || parts.length === 1 || parts[1].length <= 2;
+    }),
+  clientId: yup
+    .string()
+    .required("Cliente é obrigatório"),
+}).required();
 
-type ProposalFormData = z.infer<typeof proposalSchema>;
+type ProposalFormData = any;
 
 export default function Propostas() {
   const [proposals, setProposals] = useState<Proposal[]>([]);
@@ -51,7 +68,8 @@ export default function Propostas() {
   const [editingProposal, setEditingProposal] = useState<Proposal | null>(null);
 
   const form = useForm<ProposalFormData>({
-    resolver: zodResolver(proposalSchema),
+    resolver: yupResolver(proposalSchema),
+    mode: "onChange", // Validação em tempo real
     defaultValues: {
       title: "",
       status: "aberta",

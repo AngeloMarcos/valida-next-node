@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -26,20 +26,59 @@ const productTypeLabels = {
   financing: "Financiamento",
 };
 
-const productSchema = z.object({
-  name: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
-  type: z.enum(["credit", "consortium", "financing"]),
-  bank_id: z.string().min(1, "Banco é obrigatório"),
-  min_amount: z.string().min(1, "Valor mínimo é obrigatório"),
-  max_amount: z.string().min(1, "Valor máximo é obrigatório"),
-  min_installments: z.string().min(1, "Mínimo de parcelas é obrigatório"),
-  max_installments: z.string().min(1, "Máximo de parcelas é obrigatório"),
-  interest_rate: z.string().min(1, "Taxa de juros é obrigatória"),
-  description: z.string().optional(),
-  is_active: z.boolean(),
-});
+const productSchema = yup.object({
+  name: yup
+    .string()
+    .required("Nome é obrigatório")
+    .min(3, "Nome deve ter no mínimo 3 caracteres")
+    .max(100, "Nome deve ter no máximo 100 caracteres"),
+  type: yup
+    .string()
+    .oneOf(["credit", "consortium", "financing"], "Tipo inválido")
+    .required("Tipo é obrigatório"),
+  bank_id: yup
+    .string()
+    .required("Banco é obrigatório"),
+  min_amount: yup
+    .string()
+    .required("Valor mínimo é obrigatório")
+    .test("is-number", "Valor deve ser um número válido", (value) => !isNaN(Number(value)))
+    .test("is-positive", "Valor deve ser maior que zero", (value) => Number(value) > 0),
+  max_amount: yup
+    .string()
+    .required("Valor máximo é obrigatório")
+    .test("is-number", "Valor deve ser um número válido", (value) => !isNaN(Number(value)))
+    .test("is-positive", "Valor deve ser maior que zero", (value) => Number(value) > 0)
+    .test("is-greater", "Valor máximo deve ser maior que o mínimo", function(value) {
+      const { min_amount } = this.parent;
+      return Number(value) > Number(min_amount);
+    }),
+  min_installments: yup
+    .string()
+    .required("Mínimo de parcelas é obrigatório")
+    .test("is-number", "Parcelas deve ser um número válido", (value) => !isNaN(Number(value)))
+    .test("is-positive", "Parcelas deve ser maior que zero", (value) => Number(value) > 0)
+    .test("is-integer", "Parcelas deve ser um número inteiro", (value) => Number.isInteger(Number(value))),
+  max_installments: yup
+    .string()
+    .required("Máximo de parcelas é obrigatório")
+    .test("is-number", "Parcelas deve ser um número válido", (value) => !isNaN(Number(value)))
+    .test("is-positive", "Parcelas deve ser maior que zero", (value) => Number(value) > 0)
+    .test("is-integer", "Parcelas deve ser um número inteiro", (value) => Number.isInteger(Number(value)))
+    .test("is-greater", "Parcelas máximas devem ser maiores que as mínimas", function(value) {
+      const { min_installments } = this.parent;
+      return Number(value) > Number(min_installments);
+    }),
+  interest_rate: yup
+    .string()
+    .required("Taxa de juros é obrigatória")
+    .test("is-number", "Taxa deve ser um número válido", (value) => !isNaN(Number(value)))
+    .test("is-non-negative", "Taxa não pode ser negativa", (value) => Number(value) >= 0),
+  description: yup.string().max(500, "Descrição deve ter no máximo 500 caracteres"),
+  is_active: yup.boolean().required(),
+}).required();
 
-type ProductFormData = z.infer<typeof productSchema>;
+type ProductFormData = any;
 
 export default function Produtos() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -51,7 +90,8 @@ export default function Produtos() {
   const [activeTab, setActiveTab] = useState("all");
 
   const form = useForm<ProductFormData>({
-    resolver: zodResolver(productSchema),
+    resolver: yupResolver(productSchema),
+    mode: "onChange", // Validação em tempo real
     defaultValues: {
       name: "",
       type: "credit",
