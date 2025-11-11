@@ -1,19 +1,11 @@
 import { useEffect, useState } from "react";
+import { useForm, FormProvider } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -21,12 +13,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, Package, Building2, ArrowRight } from "lucide-react";
+import { Plus, Pencil, Trash2, Building2, Power } from "lucide-react";
 import { api, Product, Bank } from "@/lib/api";
 import { toast } from "sonner";
+import { FormInput, FormSelect, FormTextarea, FormSwitch } from "@/components/form";
 
 const productTypeLabels = {
   credit: "Crédito Pessoal",
@@ -34,28 +26,44 @@ const productTypeLabels = {
   financing: "Financiamento",
 };
 
+const productSchema = z.object({
+  name: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
+  type: z.enum(["credit", "consortium", "financing"]),
+  bank_id: z.string().min(1, "Banco é obrigatório"),
+  min_amount: z.string().min(1, "Valor mínimo é obrigatório"),
+  max_amount: z.string().min(1, "Valor máximo é obrigatório"),
+  min_installments: z.string().min(1, "Mínimo de parcelas é obrigatório"),
+  max_installments: z.string().min(1, "Máximo de parcelas é obrigatório"),
+  interest_rate: z.string().min(1, "Taxa de juros é obrigatória"),
+  description: z.string().optional(),
+  is_active: z.boolean(),
+});
+
+type ProductFormData = z.infer<typeof productSchema>;
+
 export default function Produtos() {
   const [products, setProducts] = useState<Product[]>([]);
   const [banks, setBanks] = useState<Bank[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [activeTab, setActiveTab] = useState("all");
-  const [bankFilter, setBankFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [formData, setFormData] = useState({
-    name: "",
-    type: "credit" as Product["type"],
-    bank_id: "",
-    min_amount: "",
-    max_amount: "",
-    min_installments: "",
-    max_installments: "",
-    interest_rate: "",
-    description: "",
-    is_active: true,
+
+  const form = useForm<ProductFormData>({
+    resolver: zodResolver(productSchema),
+    defaultValues: {
+      name: "",
+      type: "credit",
+      bank_id: "",
+      min_amount: "",
+      max_amount: "",
+      min_installments: "",
+      max_installments: "",
+      interest_rate: "",
+      description: "",
+      is_active: true,
+    },
   });
 
   const loadData = async () => {
@@ -65,8 +73,7 @@ export default function Produtos() {
         api.getBanks(),
       ]);
       setProducts(productsData);
-      setBanks(banksData.filter(b => b.is_active));
-      setFilteredProducts(productsData);
+      setBanks(banksData.filter((b) => b.is_active));
     } catch (error) {
       toast.error("Erro ao carregar dados");
     } finally {
@@ -78,41 +85,24 @@ export default function Produtos() {
     loadData();
   }, []);
 
-  useEffect(() => {
-    let filtered = products;
+  const filteredProducts = products.filter((product) => {
+    if (activeTab === "all") return true;
+    return product.type === activeTab;
+  });
 
-    if (activeTab !== "all") {
-      filtered = filtered.filter(p => p.type === activeTab);
-    }
-
-    if (bankFilter !== "all") {
-      filtered = filtered.filter(p => p.bank_id === bankFilter);
-    }
-
-    if (statusFilter !== "all") {
-      const isActive = statusFilter === "true";
-      filtered = filtered.filter(p => p.is_active === isActive);
-    }
-
-    setFilteredProducts(filtered);
-  }, [activeTab, bankFilter, statusFilter, products]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (currentStep < 3) {
-      setCurrentStep(currentStep + 1);
-      return;
-    }
-
+  const handleSubmit = async (data: ProductFormData) => {
     try {
       const productData = {
-        ...formData,
-        min_amount: parseFloat(formData.min_amount),
-        max_amount: parseFloat(formData.max_amount),
-        min_installments: parseInt(formData.min_installments),
-        max_installments: parseInt(formData.max_installments),
-        interest_rate: parseFloat(formData.interest_rate),
+        name: data.name,
+        type: data.type,
+        bank_id: data.bank_id,
+        min_amount: parseFloat(data.min_amount),
+        max_amount: parseFloat(data.max_amount),
+        min_installments: parseInt(data.min_installments),
+        max_installments: parseInt(data.max_installments),
+        interest_rate: parseFloat(data.interest_rate),
+        description: data.description,
+        is_active: data.is_active,
       };
 
       if (editingProduct) {
@@ -120,7 +110,7 @@ export default function Produtos() {
         toast.success("Produto atualizado com sucesso!");
       } else {
         await api.createProduct(productData);
-        toast.success("Produto cadastrado com sucesso!");
+        toast.success("Produto criado com sucesso!");
       }
       setIsDialogOpen(false);
       resetForm();
@@ -132,7 +122,7 @@ export default function Produtos() {
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
-    setFormData({
+    form.reset({
       name: product.name,
       type: product.type,
       bank_id: product.bank_id,
@@ -149,18 +139,23 @@ export default function Produtos() {
 
   const handleToggleStatus = async (product: Product) => {
     try {
-      await api.updateProduct(product.id, { is_active: !product.is_active });
-      toast.success(`Produto ${!product.is_active ? 'ativado' : 'desativado'} com sucesso!`);
+      await api.updateProduct(product.id, {
+        ...product,
+        is_active: !product.is_active,
+      });
+      toast.success(
+        `Produto ${!product.is_active ? "ativado" : "desativado"} com sucesso!`
+      );
       loadData();
     } catch (error) {
       toast.error("Erro ao alterar status do produto");
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (product: Product) => {
     if (confirm("Tem certeza que deseja excluir este produto?")) {
       try {
-        await api.deleteProduct(id);
+        await api.deleteProduct(product.id);
         toast.success("Produto excluído com sucesso!");
         loadData();
       } catch (error) {
@@ -170,7 +165,7 @@ export default function Produtos() {
   };
 
   const resetForm = () => {
-    setFormData({
+    form.reset({
       name: "",
       type: "credit",
       bank_id: "",
@@ -186,6 +181,33 @@ export default function Produtos() {
     setCurrentStep(1);
   };
 
+  const bankOptions = banks.map((bank) => ({
+    value: bank.id,
+    label: bank.name,
+  }));
+
+  const productTypeOptions = [
+    { value: "credit", label: "Crédito Pessoal" },
+    { value: "consortium", label: "Consórcio" },
+    { value: "financing", label: "Financiamento" },
+  ];
+
+  const handleNextStep = async () => {
+    const fieldsToValidate =
+      currentStep === 1
+        ? ["name", "type", "bank_id"]
+        : ["min_amount", "max_amount", "min_installments", "max_installments", "interest_rate"];
+
+    const isValid = await form.trigger(fieldsToValidate as any);
+    if (isValid) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const handlePrevStep = () => {
+    setCurrentStep(currentStep - 1);
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -193,21 +215,25 @@ export default function Produtos() {
           <div>
             <h2 className="text-3xl font-bold tracking-tight">Produtos Financeiros</h2>
             <p className="text-muted-foreground">
-              Gerencie os produtos financeiros disponíveis
+              Gerencie os produtos disponíveis para propostas
             </p>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={(open) => {
+          <Button onClick={() => setIsDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Produto
+          </Button>
+        </div>
+
+        <Dialog
+          open={isDialogOpen}
+          onOpenChange={(open) => {
             setIsDialogOpen(open);
             if (!open) resetForm();
-          }}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Novo Produto
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
-              <form onSubmit={handleSubmit}>
+          }}
+        >
+          <DialogContent className="sm:max-w-[600px]">
+            <FormProvider {...form}>
+              <form onSubmit={form.handleSubmit(handleSubmit)}>
                 <DialogHeader>
                   <DialogTitle>
                     {editingProduct ? "Editar Produto" : "Novo Produto"}
@@ -216,196 +242,106 @@ export default function Produtos() {
                     Passo {currentStep} de 3
                   </DialogDescription>
                 </DialogHeader>
-                
-                {currentStep === 1 && (
-                  <div className="grid gap-4 py-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Nome do Produto *</Label>
-                      <Input
-                        id="name"
+
+                <div className="py-4">
+                  {currentStep === 1 && (
+                    <div className="grid gap-4">
+                      <FormInput
+                        name="name"
+                        label="Nome do Produto"
                         placeholder="Ex: Crédito Pessoal Premium"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        required
+                      />
+                      <FormSelect
+                        name="type"
+                        label="Tipo de Produto"
+                        options={productTypeOptions}
+                      />
+                      <FormSelect
+                        name="bank_id"
+                        label="Banco"
+                        placeholder="Selecione um banco"
+                        options={bankOptions}
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="type">Tipo de Produto *</Label>
-                      <Select
-                        value={formData.type}
-                        onValueChange={(value) => setFormData({ ...formData, type: value as Product["type"] })}
-                        required
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="credit">Crédito Pessoal</SelectItem>
-                          <SelectItem value="consortium">Consórcio</SelectItem>
-                          <SelectItem value="financing">Financiamento</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="bank_id">Banco *</Label>
-                      <Select
-                        value={formData.bank_id}
-                        onValueChange={(value) => setFormData({ ...formData, bank_id: value })}
-                        required
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione um banco" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {banks.map((bank) => (
-                            <SelectItem key={bank.id} value={bank.id}>
-                              {bank.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                )}
+                  )}
 
-                {currentStep === 2 && (
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="min_amount">Valor Mínimo *</Label>
-                        <Input
-                          id="min_amount"
+                  {currentStep === 2 && (
+                    <div className="grid gap-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormInput
+                          name="min_amount"
+                          label="Valor Mínimo"
                           type="number"
                           step="0.01"
-                          placeholder="R$ 0,00"
-                          value={formData.min_amount}
-                          onChange={(e) => setFormData({ ...formData, min_amount: e.target.value })}
-                          required
+                          placeholder="0.00"
                         />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="max_amount">Valor Máximo *</Label>
-                        <Input
-                          id="max_amount"
+                        <FormInput
+                          name="max_amount"
+                          label="Valor Máximo"
                           type="number"
                           step="0.01"
-                          placeholder="R$ 0,00"
-                          value={formData.max_amount}
-                          onChange={(e) => setFormData({ ...formData, max_amount: e.target.value })}
-                          required
+                          placeholder="0.00"
                         />
                       </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="min_installments">Mínimo de Parcelas *</Label>
-                        <Input
-                          id="min_installments"
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormInput
+                          name="min_installments"
+                          label="Mínimo de Parcelas"
                           type="number"
-                          min="1"
-                          value={formData.min_installments}
-                          onChange={(e) => setFormData({ ...formData, min_installments: e.target.value })}
-                          required
+                          placeholder="1"
                         />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="max_installments">Máximo de Parcelas *</Label>
-                        <Input
-                          id="max_installments"
+                        <FormInput
+                          name="max_installments"
+                          label="Máximo de Parcelas"
                           type="number"
-                          value={formData.max_installments}
-                          onChange={(e) => setFormData({ ...formData, max_installments: e.target.value })}
-                          required
+                          placeholder="60"
                         />
                       </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="interest_rate">Taxa de Juros Mensal (%) *</Label>
-                      <Input
-                        id="interest_rate"
+                      <FormInput
+                        name="interest_rate"
+                        label="Taxa de Juros Mensal (%)"
                         type="number"
                         step="0.01"
                         placeholder="0.00"
-                        value={formData.interest_rate}
-                        onChange={(e) => setFormData({ ...formData, interest_rate: e.target.value })}
-                        required
                       />
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {currentStep === 3 && (
-                  <div className="grid gap-4 py-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="description">Descrição Detalhada</Label>
-                      <Textarea
-                        id="description"
+                  {currentStep === 3 && (
+                    <div className="grid gap-4">
+                      <FormTextarea
+                        name="description"
+                        label="Descrição Detalhada"
                         rows={4}
                         placeholder="Descreva as características do produto..."
-                        value={formData.description}
-                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      />
+                      <FormSwitch
+                        name="is_active"
+                        label="Produto Ativo"
+                        helperText="Produtos inativos não aparecem no simulador"
                       />
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="is_active"
-                        checked={formData.is_active}
-                        onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-                      />
-                      <Label htmlFor="is_active" className="text-sm text-muted-foreground">
-                        Produto Ativo (produtos inativos não aparecem no simulador)
-                      </Label>
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
 
                 <DialogFooter>
                   {currentStep > 1 && (
-                    <Button type="button" variant="outline" onClick={() => setCurrentStep(currentStep - 1)}>
+                    <Button type="button" variant="outline" onClick={handlePrevStep}>
                       Voltar
                     </Button>
                   )}
-                  <Button type="submit">
-                    {currentStep < 3 ? (
-                      <>
-                        Próximo
-                        <ArrowRight className="h-4 w-4 ml-2" />
-                      </>
-                    ) : (
-                      "Salvar"
-                    )}
-                  </Button>
+                  {currentStep < 3 ? (
+                    <Button type="button" onClick={handleNextStep}>
+                      Próximo
+                    </Button>
+                  ) : (
+                    <Button type="submit">Salvar</Button>
+                  )}
                 </DialogFooter>
               </form>
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        <div className="flex gap-4">
-          <Select value={bankFilter} onValueChange={setBankFilter}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Filtrar por banco" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os bancos</SelectItem>
-              {banks.map((bank) => (
-                <SelectItem key={bank.id} value={bank.id}>
-                  {bank.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="true">Ativos</SelectItem>
-              <SelectItem value="false">Inativos</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+            </FormProvider>
+          </DialogContent>
+        </Dialog>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
@@ -417,51 +353,50 @@ export default function Produtos() {
 
           <TabsContent value={activeTab} className="mt-6">
             {isLoading ? (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-64 bg-muted rounded-lg animate-pulse" />
-                ))}
-              </div>
+              <div className="text-center py-12">Carregando...</div>
             ) : filteredProducts.length === 0 ? (
-              <div className="text-center py-12">
-                <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">Nenhum produto encontrado</p>
+              <div className="text-center py-12 text-muted-foreground">
+                Nenhum produto encontrado
               </div>
             ) : (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {filteredProducts.map((product) => (
-                  <Card key={product.id} className="relative">
-                    <Badge className="absolute top-4 right-4" variant="outline">
-                      {productTypeLabels[product.type]}
-                    </Badge>
+                  <Card key={product.id}>
                     <CardHeader>
-                      <CardTitle className="pr-24">{product.name}</CardTitle>
-                      <CardDescription className="flex items-center gap-2">
-                        <Building2 className="h-4 w-4" />
-                        {product.bank_name}
-                      </CardDescription>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="text-lg">{product.name}</CardTitle>
+                          <CardDescription className="flex items-center gap-1 mt-1">
+                            <Building2 className="h-3 w-3" />
+                            {product.bank_name}
+                          </CardDescription>
+                        </div>
+                        <Badge variant="outline">{productTypeLabels[product.type]}</Badge>
+                      </div>
                     </CardHeader>
                     <CardContent className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Valor</span>
+                        <span className="text-muted-foreground">Valor:</span>
                         <span className="font-medium">
-                          {new Intl.NumberFormat('pt-BR', {
-                            style: 'currency',
-                            currency: 'BRL',
-                          }).format(product.min_amount)} - {new Intl.NumberFormat('pt-BR', {
-                            style: 'currency',
-                            currency: 'BRL',
+                          {new Intl.NumberFormat("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                          }).format(product.min_amount)}{" "}
+                          -{" "}
+                          {new Intl.NumberFormat("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
                           }).format(product.max_amount)}
                         </span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Parcelas</span>
+                        <span className="text-muted-foreground">Parcelas:</span>
                         <span className="font-medium">
                           {product.min_installments}x - {product.max_installments}x
                         </span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Taxa</span>
+                        <span className="text-muted-foreground">Taxa:</span>
                         <span className="font-medium">{product.interest_rate}% a.m.</span>
                       </div>
                       <div className="pt-2">
@@ -470,27 +405,29 @@ export default function Produtos() {
                         </Badge>
                       </div>
                     </CardContent>
-                    <CardFooter className="flex justify-end gap-2">
+                    <CardFooter className="flex gap-2">
                       <Button
-                        variant="ghost"
-                        size="icon"
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
                         onClick={() => handleEdit(product)}
                       >
-                        <Pencil className="h-4 w-4" />
+                        <Pencil className="h-3 w-3 mr-1" />
+                        Editar
                       </Button>
                       <Button
-                        variant="ghost"
-                        size="icon"
+                        variant="outline"
+                        size="sm"
                         onClick={() => handleToggleStatus(product)}
                       >
-                        <Switch checked={product.is_active} />
+                        <Power className="h-3 w-3" />
                       </Button>
                       <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(product.id)}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDelete(product)}
                       >
-                        <Trash2 className="h-4 w-4 text-destructive" />
+                        <Trash2 className="h-3 w-3 text-destructive" />
                       </Button>
                     </CardFooter>
                   </Card>

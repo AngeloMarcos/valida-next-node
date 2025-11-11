@@ -1,23 +1,9 @@
 import { useEffect, useState } from "react";
+import { useForm, FormProvider } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -28,9 +14,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { api, Proposal, Client } from "@/lib/api";
 import { toast } from "sonner";
+import { DataTable, DataTableColumn } from "@/components/table";
+import { FormInput, FormSelect } from "@/components/form";
 
 const statusColors = {
   aberta: "bg-blue-500",
@@ -46,17 +34,30 @@ const statusLabels = {
   reprovada: "Reprovada",
 };
 
+const proposalSchema = z.object({
+  title: z.string().min(3, "Título deve ter no mínimo 3 caracteres"),
+  status: z.enum(["aberta", "em_analise", "aprovada", "reprovada"]),
+  amount: z.string().min(1, "Valor é obrigatório"),
+  clientId: z.string().min(1, "Cliente é obrigatório"),
+});
+
+type ProposalFormData = z.infer<typeof proposalSchema>;
+
 export default function Propostas() {
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProposal, setEditingProposal] = useState<Proposal | null>(null);
-  const [formData, setFormData] = useState({
-    title: "",
-    status: "aberta" as Proposal["status"],
-    amount: "",
-    clientId: "",
+
+  const form = useForm<ProposalFormData>({
+    resolver: zodResolver(proposalSchema),
+    defaultValues: {
+      title: "",
+      status: "aberta",
+      amount: "",
+      clientId: "",
+    },
   });
 
   const loadData = async () => {
@@ -78,13 +79,14 @@ export default function Propostas() {
     loadData();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (data: ProposalFormData) => {
     try {
       const proposalData = {
-        ...formData,
-        amount: parseFloat(formData.amount),
-        userId: "1", // Mock user ID
+        title: data.title,
+        status: data.status,
+        clientId: data.clientId,
+        amount: parseFloat(data.amount),
+        userId: "1",
       };
 
       if (editingProposal) {
@@ -104,7 +106,7 @@ export default function Propostas() {
 
   const handleEdit = (proposal: Proposal) => {
     setEditingProposal(proposal);
-    setFormData({
+    form.reset({
       title: proposal.title,
       status: proposal.status,
       amount: proposal.amount.toString(),
@@ -113,10 +115,10 @@ export default function Propostas() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (proposal: Proposal) => {
     if (confirm("Tem certeza que deseja excluir esta proposta?")) {
       try {
-        await api.deleteProposal(id);
+        await api.deleteProposal(proposal.id);
         toast.success("Proposta excluída com sucesso!");
         loadData();
       } catch (error) {
@@ -126,7 +128,7 @@ export default function Propostas() {
   };
 
   const resetForm = () => {
-    setFormData({
+    form.reset({
       title: "",
       status: "aberta",
       amount: "",
@@ -134,6 +136,52 @@ export default function Propostas() {
     });
     setEditingProposal(null);
   };
+
+  const columns: DataTableColumn<Proposal>[] = [
+    {
+      key: "title",
+      label: "Título",
+      className: "font-medium",
+    },
+    {
+      key: "clientName",
+      label: "Cliente",
+    },
+    {
+      key: "amount",
+      label: "Valor",
+      render: (proposal) =>
+        new Intl.NumberFormat("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+        }).format(proposal.amount),
+    },
+    {
+      key: "status",
+      label: "Status",
+      render: (proposal) => (
+        <Badge className={statusColors[proposal.status]}>
+          {statusLabels[proposal.status]}
+        </Badge>
+      ),
+    },
+    {
+      key: "actions",
+      label: "Ações",
+    },
+  ];
+
+  const clientOptions = clients.map((client) => ({
+    value: client.id,
+    label: client.name,
+  }));
+
+  const statusOptions = [
+    { value: "aberta", label: "Aberta" },
+    { value: "em_analise", label: "Em Análise" },
+    { value: "aprovada", label: "Aprovada" },
+    { value: "reprovada", label: "Reprovada" },
+  ];
 
   return (
     <DashboardLayout>
@@ -156,145 +204,58 @@ export default function Propostas() {
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px]">
-              <form onSubmit={handleSubmit}>
-                <DialogHeader>
-                  <DialogTitle>
-                    {editingProposal ? "Editar Proposta" : "Nova Proposta"}
-                  </DialogTitle>
-                  <DialogDescription>
-                    Preencha os dados da proposta abaixo
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Título</Label>
-                    <Input
-                      id="title"
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      required
+              <FormProvider {...form}>
+                <form onSubmit={form.handleSubmit(handleSubmit)}>
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editingProposal ? "Editar Proposta" : "Nova Proposta"}
+                    </DialogTitle>
+                    <DialogDescription>
+                      Preencha os dados da proposta abaixo
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <FormInput
+                      name="title"
+                      label="Título"
+                      placeholder="Digite o título da proposta"
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="clientId">Cliente</Label>
-                    <Select
-                      value={formData.clientId}
-                      onValueChange={(value) => setFormData({ ...formData, clientId: value })}
-                      required
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um cliente" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {clients.map((client) => (
-                          <SelectItem key={client.id} value={client.id}>
-                            {client.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="amount">Valor (R$)</Label>
-                    <Input
-                      id="amount"
+                    <FormSelect
+                      name="clientId"
+                      label="Cliente"
+                      placeholder="Selecione um cliente"
+                      options={clientOptions}
+                    />
+                    <FormInput
+                      name="amount"
+                      label="Valor (R$)"
                       type="number"
                       step="0.01"
-                      value={formData.amount}
-                      onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                      required
+                      placeholder="0.00"
+                    />
+                    <FormSelect
+                      name="status"
+                      label="Status"
+                      options={statusOptions}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="status">Status</Label>
-                    <Select
-                      value={formData.status}
-                      onValueChange={(value) => setFormData({ ...formData, status: value as Proposal["status"] })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="aberta">Aberta</SelectItem>
-                        <SelectItem value="em_analise">Em Análise</SelectItem>
-                        <SelectItem value="aprovada">Aprovada</SelectItem>
-                        <SelectItem value="reprovada">Reprovada</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button type="submit">Salvar</Button>
-                </DialogFooter>
-              </form>
+                  <DialogFooter>
+                    <Button type="submit">Salvar</Button>
+                  </DialogFooter>
+                </form>
+              </FormProvider>
             </DialogContent>
           </Dialog>
         </div>
 
-        <div className="rounded-lg border bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Título</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Valor</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center">
-                    Carregando...
-                  </TableCell>
-                </TableRow>
-              ) : proposals.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center">
-                    Nenhuma proposta cadastrada
-                  </TableCell>
-                </TableRow>
-              ) : (
-                proposals.map((proposal) => (
-                  <TableRow key={proposal.id}>
-                    <TableCell className="font-medium">{proposal.title}</TableCell>
-                    <TableCell>{proposal.clientName}</TableCell>
-                    <TableCell>
-                      {new Intl.NumberFormat('pt-BR', {
-                        style: 'currency',
-                        currency: 'BRL',
-                      }).format(proposal.amount)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={statusColors[proposal.status]}>
-                        {statusLabels[proposal.status]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(proposal)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(proposal.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+        <DataTable
+          data={proposals}
+          columns={columns}
+          isLoading={isLoading}
+          emptyMessage="Nenhuma proposta cadastrada"
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
       </div>
     </DashboardLayout>
   );
