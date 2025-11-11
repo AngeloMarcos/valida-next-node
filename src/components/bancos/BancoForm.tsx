@@ -8,12 +8,13 @@ import { Banco, BancoFormData } from '@/hooks/useBancos';
 const bancoSchema = yup.object({
   nome: yup
     .string()
+    .transform((value) => value?.trim())
     .required('Nome é obrigatório')
     .min(3, 'Nome deve ter no mínimo 3 caracteres')
     .max(100, 'Nome deve ter no máximo 100 caracteres'),
-  cnpj: yup.string(),
-  email: yup.string().email('E-mail inválido'),
-  telefone: yup.string(),
+  cnpj: yup.string().transform((value) => value?.trim()),
+  email: yup.string().transform((value) => value?.trim()).email('E-mail inválido'),
+  telefone: yup.string().transform((value) => value?.trim()),
 });
 
 interface BancoFormProps {

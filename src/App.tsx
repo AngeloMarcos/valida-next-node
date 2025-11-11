@@ -11,6 +11,7 @@ import Propostas from "./pages/Propostas";
 import PropostaDetail from "./pages/PropostaDetail";
 import Bancos from "./pages/Bancos";
 import Produtos from "./pages/Produtos";
+import Users from "./pages/Users";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/propostas/:id" element={<PropostaDetail />} />
             <Route path="/bancos" element={<Bancos />} />
             <Route path="/produtos" element={<Produtos />} />
+            <Route path="/users" element={<Users />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

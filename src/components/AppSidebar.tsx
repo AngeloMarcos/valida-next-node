@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, FileText, LogOut, Building2, Package } from "lucide-react";
+import { LayoutDashboard, Users, FileText, LogOut, Building2, Package, UserCog } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -21,6 +21,7 @@ const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Clientes", url: "/clientes", icon: Users },
   { title: "Propostas", url: "/propostas", icon: FileText },
+  { title: "Usuários", url: "/users", icon: UserCog, adminOnly: true },
 ];
 
 const financialItems = [
@@ -32,7 +33,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, isAdmin } = useAuth();
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
 
@@ -59,19 +60,26 @@ export function AppSidebar() {
           <SidebarGroupLabel>CRM</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={currentPath === item.url}>
-                    <NavLink
-                      to={item.url}
-                      className="flex items-center gap-3 hover:bg-sidebar-accent"
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {menuItems.map((item) => {
+                // Hide admin-only items for non-admin users
+                if (item.adminOnly && !isAdmin) {
+                  return null;
+                }
+                
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild isActive={currentPath === item.url}>
+                      <NavLink
+                        to={item.url}
+                        className="flex items-center gap-3 hover:bg-sidebar-accent"
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {!collapsed && <span>{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
