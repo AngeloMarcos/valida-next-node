@@ -14,7 +14,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { authService } from "@/lib/auth";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 const menuItems = [
@@ -32,12 +32,12 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
+  const { signOut } = useAuth();
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
 
-  const handleLogout = () => {
-    authService.logout();
-    toast.success("Logout realizado com sucesso");
+  const handleLogout = async () => {
+    await signOut();
     navigate("/login");
   };
 

@@ -1,49 +1,45 @@
-// Mock authentication system
-// In production, replace with real API calls
+import { supabase } from '@/integrations/supabase/client';
 
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: 'admin' | 'operador' | 'consultor';
-}
+export const auth = {
+  async signIn(email: string, password: string) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    return { data, error };
+  },
 
-const STORAGE_KEY = 'valida_crm_user';
-
-export const authService = {
-  login: async (email: string, password: string): Promise<{ user: User; token: string }> => {
-    // Mock login - replace with real API call
-    await new Promise(resolve => setTimeout(resolve, 500));
+  async signUp(email: string, password: string, metadata?: Record<string, any>) {
+    const redirectUrl = `${window.location.origin}/`;
     
-    if (email === 'admin@validacrm.com' && password === 'admin123') {
-      const user: User = {
-        id: '1',
-        name: 'Administrador',
-        email: 'admin@validacrm.com',
-        role: 'admin',
-      };
-      const token = 'mock-jwt-token-' + Date.now();
-      
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ user, token }));
-      return { user, token };
-    }
-    
-    throw new Error('Credenciais inválidas');
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: metadata,
+      },
+    });
+    return { data, error };
   },
 
-  logout: () => {
-    localStorage.removeItem(STORAGE_KEY);
+  async signOut() {
+    const { error } = await supabase.auth.signOut();
+    return { error };
   },
 
-  getCurrentUser: (): { user: User; token: string } | null => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      return JSON.parse(stored);
-    }
-    return null;
+  async getCurrentUser() {
+    const { data: { user } } = await supabase.auth.getUser();
+    return user;
   },
 
-  isAuthenticated: (): boolean => {
-    return !!authService.getCurrentUser();
+  async getCurrentSession() {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session;
+  },
+
+  async refreshSession() {
+    const { data: { session }, error } = await supabase.auth.refreshSession();
+    return { session, error };
   },
 };
