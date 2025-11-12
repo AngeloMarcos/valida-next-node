@@ -77,11 +77,12 @@ export default function Login() {
         { abortEarly: false }
       );
       setSignupLoading(true);
-      await signUp(signupEmail, signupPassword);
-      setActiveTab("login");
-      setSignupEmail("");
-      setSignupPassword("");
-      setConfirmPassword("");
+      const { error } = await signUp(signupEmail, signupPassword);
+      
+      if (!error) {
+        // Redireciona para o dashboard após cadastro bem-sucedido
+        navigate("/dashboard");
+      }
     } catch (error: any) {
       if (error.inner) {
         const errors: any = {};

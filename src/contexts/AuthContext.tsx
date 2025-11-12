@@ -156,13 +156,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Get default empresa_id using secure function
       const { data: empresaId } = await supabase.rpc('get_default_empresa_for_signup');
 
-      const redirectUrl = `${window.location.origin}/`;
-
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: redirectUrl,
+          emailRedirectTo: `${window.location.origin}/`,
           data: {
             nome: nome || email,
             empresa_id: empresaId,
@@ -175,7 +173,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error };
       }
 
-      toast.success('Cadastro realizado! Verifique seu email.');
+      // Auto-login após cadastro (sem necessidade de confirmação de email)
+      if (data?.user && data?.session) {
+        toast.success('Conta criada e login realizado com sucesso!');
+      } else {
+        toast.success('Conta criada com sucesso! Faça login para continuar.');
+      }
+      
       return { error: null };
     } catch (error: any) {
       toast.error('Erro ao criar conta');
