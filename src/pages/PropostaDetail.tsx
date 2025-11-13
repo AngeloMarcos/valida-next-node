@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Edit, Trash2, FileText } from 'lucide-react';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { ArrowLeft, Edit, Trash2, FileText, History } from 'lucide-react';
 import { usePropostas, Proposta } from '@/hooks/usePropostas';
 import { PropostaTimeline } from '@/components/propostas/PropostaTimeline';
 import { format } from 'date-fns';
@@ -23,6 +24,7 @@ export default function PropostaDetail() {
   const navigate = useNavigate();
   const { loading, getPropostaById, deleteProposta } = usePropostas();
   const [proposta, setProposta] = useState<Proposta | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -101,6 +103,27 @@ export default function PropostaDetail() {
               <Edit className="h-4 w-4 mr-2" />
               Editar
             </Button>
+            
+            <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline">
+                  <History className="h-4 w-4 mr-2" />
+                  Histórico
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle>Histórico de Alterações</SheetTitle>
+                  <SheetDescription>
+                    Todas as alterações feitas nesta proposta
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="mt-6">
+                  <PropostaTimeline propostaId={proposta.id} />
+                </div>
+              </SheetContent>
+            </Sheet>
+
             <Button variant="outline" onClick={handleDelete}>
               <Trash2 className="h-4 w-4 mr-2 text-destructive" />
               Excluir
@@ -194,11 +217,6 @@ export default function PropostaDetail() {
               </p>
             </CardContent>
           </Card>
-        </div>
-
-        {/* Timeline Section */}
-        <div className="mt-6">
-          <PropostaTimeline propostaId={proposta.id} />
         </div>
       </div>
     </DashboardLayout>

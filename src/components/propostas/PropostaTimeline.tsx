@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Clock, User, Edit, Trash2, PlusCircle } from 'lucide-react';
+import { User, Edit, Trash2, PlusCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
@@ -139,56 +137,29 @@ export function PropostaTimeline({ propostaId }: PropostaTimelineProps) {
 
   if (loading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Histórico de Alterações
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center h-32">
-            <p className="text-sm text-muted-foreground">Carregando histórico...</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center h-32">
+        <p className="text-sm text-muted-foreground">Carregando histórico...</p>
+      </div>
     );
   }
 
   if (logs.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Histórico de Alterações
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center h-32">
-            <p className="text-sm text-muted-foreground">Nenhuma alteração registrada</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col items-center justify-center h-64 gap-2">
+        <p className="text-sm text-muted-foreground">Nenhuma alteração registrada</p>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Clock className="h-5 w-5" />
-          Histórico de Alterações
-        </CardTitle>
-        <p className="text-sm text-muted-foreground">
-          {logs.length} {logs.length === 1 ? 'registro' : 'registros'}
-        </p>
-      </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-[500px] pr-4">
-          <div className="relative space-y-4">
-            {/* Timeline line */}
-            <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-border" />
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        {logs.length} {logs.length === 1 ? 'registro' : 'registros'}
+      </p>
+      
+      <div className="relative space-y-4">
+        {/* Timeline line */}
+        <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-border" />
 
             {logs.map((log, index) => {
               const config = actionConfig[log.action as keyof typeof actionConfig];
@@ -233,9 +204,7 @@ export function PropostaTimeline({ propostaId }: PropostaTimelineProps) {
                 </div>
               );
             })}
-          </div>
-        </ScrollArea>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
