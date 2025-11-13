@@ -17,12 +17,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Plus, Search, Filter } from 'lucide-react';
+import { Plus, Search, Filter, LayoutList, Kanban } from 'lucide-react';
 import { usePropostas, Proposta, PropostaFormData, PropostaFilters } from '@/hooks/usePropostas';
 import { useBancosSelect } from '@/hooks/useBancosSelect';
 import { PropostaForm } from '@/components/propostas/PropostaForm';
 import { PropostasList } from '@/components/propostas/PropostasList';
 import { PropostasPagination } from '@/components/propostas/PropostasPagination';
+import { PropostasKanban } from '@/components/propostas/PropostasKanban';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function Propostas() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -35,6 +37,7 @@ export default function Propostas() {
     createProposta,
     updateProposta,
     deleteProposta,
+    updatePropostaStatus,
   } = usePropostas();
 
   const { bancos } = useBancosSelect();
@@ -46,6 +49,9 @@ export default function Propostas() {
   const [pageSize, setPageSize] = useState(10);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProposta, setEditingProposta] = useState<Proposta | undefined>();
+
+  // View mode
+  const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -119,6 +125,14 @@ export default function Propostas() {
     }
   };
 
+  const handleStatusChange = async (id: string, status: string) => {
+    const success = await updatePropostaStatus(id, status);
+    if (success) {
+      loadPropostas();
+    }
+    return success;
+  };
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
@@ -159,74 +173,96 @@ export default function Propostas() {
           </Button>
         </div>
 
-        <div className="flex flex-col gap-4">
-          <div className="flex gap-2">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por cliente..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
-              />
+        <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'list' | 'kanban')} className="space-y-4">
+          <div className="flex items-center justify-between">
+            <TabsList>
+              <TabsTrigger value="list" className="gap-2">
+                <LayoutList className="h-4 w-4" />
+                Lista
+              </TabsTrigger>
+              <TabsTrigger value="kanban" className="gap-2">
+                <Kanban className="h-4 w-4" />
+                Kanban
+              </TabsTrigger>
+            </TabsList>
+
+            <div className="flex gap-2 items-center">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por cliente..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9 w-[250px]"
+                />
+              </div>
+
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos status</SelectItem>
+                  <SelectItem value="rascunho">Rascunho</SelectItem>
+                  <SelectItem value="em_analise">Em Análise</SelectItem>
+                  <SelectItem value="aprovada">Aprovada</SelectItem>
+                  <SelectItem value="reprovada">Reprovada</SelectItem>
+                  <SelectItem value="cancelada">Cancelada</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={bancoFilter} onValueChange={setBancoFilter}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Banco" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos bancos</SelectItem>
+                  {bancos.map((banco) => (
+                    <SelectItem key={banco.value} value={banco.value}>
+                      {banco.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {(searchTerm || statusFilter !== 'all' || bancoFilter !== 'all') && (
+                <Button variant="outline" size="sm" onClick={handleClearFilters}>
+                  Limpar
+                </Button>
+              )}
             </div>
           </div>
 
-          <div className="flex gap-2 items-center">
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Todos os status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os status</SelectItem>
-                <SelectItem value="rascunho">Rascunho</SelectItem>
-                <SelectItem value="em_analise">Em Análise</SelectItem>
-                <SelectItem value="aprovada">Aprovada</SelectItem>
-                <SelectItem value="reprovada">Reprovada</SelectItem>
-                <SelectItem value="cancelada">Cancelada</SelectItem>
-              </SelectContent>
-            </Select>
+          <TabsContent value="list" className="space-y-4">
+            <PropostasList
+              propostas={propostas}
+              loading={loading}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
 
-            <Select value={bancoFilter} onValueChange={setBancoFilter}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Todos os bancos" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os bancos</SelectItem>
-                {bancos.map((banco) => (
-                  <SelectItem key={banco.value} value={banco.value}>
-                    {banco.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {(searchTerm || statusFilter || bancoFilter) && (
-              <Button variant="outline" size="sm" onClick={handleClearFilters}>
-                Limpar Filtros
-              </Button>
+            {totalItems > 0 && (
+              <PropostasPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                pageSize={pageSize}
+                totalItems={totalItems}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
+              />
             )}
-          </div>
-        </div>
+          </TabsContent>
 
-        <PropostasList
-          propostas={propostas}
-          loading={loading}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
-
-        {totalItems > 0 && (
-          <PropostasPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            pageSize={pageSize}
-            totalItems={totalItems}
-            onPageChange={handlePageChange}
-            onPageSizeChange={handlePageSizeChange}
-          />
-        )}
+          <TabsContent value="kanban">
+            <PropostasKanban
+              propostas={propostas}
+              loading={loading}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onStatusChange={handleStatusChange}
+            />
+          </TabsContent>
+        </Tabs>
 
         <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
           <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
