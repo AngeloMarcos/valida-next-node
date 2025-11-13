@@ -51,6 +51,7 @@ export function PropostaForm({ proposta, onSubmit, onCancel, loading }: Proposta
       observacoes: proposta?.observacoes || '',
       status: proposta?.status || 'rascunho',
     },
+    mode: 'onChange',
   });
 
   const selectedBancoId = methods.watch('banco_id');
@@ -70,7 +71,7 @@ export function PropostaForm({ proposta, onSubmit, onCancel, loading }: Proposta
     { value: 'em_analise', label: 'Em Análise' },
     { value: 'aprovada', label: 'Aprovada' },
     { value: 'reprovada', label: 'Reprovada' },
-    { value: 'finalizada', label: 'Finalizada' },
+    { value: 'cancelada', label: 'Cancelada' },
   ];
 
   return (
@@ -81,13 +82,15 @@ export function PropostaForm({ proposta, onSubmit, onCancel, loading }: Proposta
           label="Cliente *"
           placeholder="Selecione um cliente"
           options={clientes}
+          helperText={clientes.length === 0 ? "Cadastre um cliente primeiro" : undefined}
         />
 
         <FormSelect
           name="banco_id"
-          label="Banco *"
+          label="Banco"
           placeholder="Selecione um banco"
           options={bancos}
+          helperText={bancos.length === 0 ? "Cadastre um banco primeiro" : undefined}
         />
 
         <FormSelect

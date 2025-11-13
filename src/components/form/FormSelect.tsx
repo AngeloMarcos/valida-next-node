@@ -51,21 +51,34 @@ export const FormSelect: React.FC<FormSelectProps> = ({
         render={({ field }) => (
           <Select
             onValueChange={field.onChange}
-            value={field.value}
+            value={field.value || ""}
             disabled={disabled}
           >
             <SelectTrigger
               id={name}
-              className={cn(error && "border-destructive")}
+              className={cn(
+                error && "border-destructive",
+                "bg-background"
+              )}
             >
               <SelectValue placeholder={placeholder} />
             </SelectTrigger>
-            <SelectContent>
-              {options.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
+            <SelectContent className="bg-popover z-50">
+              {options.length === 0 ? (
+                <div className="p-2 text-sm text-muted-foreground text-center">
+                  Nenhuma opção disponível
+                </div>
+              ) : (
+                options.map((option) => (
+                  <SelectItem 
+                    key={option.value} 
+                    value={option.value}
+                    className="cursor-pointer"
+                  >
+                    {option.label}
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
         )}
