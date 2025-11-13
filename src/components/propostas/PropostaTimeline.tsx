@@ -49,10 +49,16 @@ export function PropostaTimeline({ propostaId }: PropostaTimelineProps) {
         .eq('entity_id', propostaId)
         .order('timestamp', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao carregar histórico:', error);
+        throw error;
+      }
+      
+      console.log('Timeline data loaded:', data); // Debug log
       setLogs((data as ActivityLog[]) || []);
     } catch (error) {
       console.error('Erro ao carregar histórico:', error);
+      setLogs([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
