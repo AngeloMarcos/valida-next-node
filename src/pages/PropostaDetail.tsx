@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Edit, Trash2, FileText } from 'lucide-react';
 import { usePropostas, Proposta } from '@/hooks/usePropostas';
+import { PropostaTimeline } from '@/components/propostas/PropostaTimeline';
 import { format } from 'date-fns';
 
 const statusConfig = {
@@ -193,6 +194,11 @@ export default function PropostaDetail() {
               </p>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Timeline Section */}
+        <div className="mt-6">
+          <PropostaTimeline propostaId={proposta.id} />
         </div>
       </div>
     </DashboardLayout>
