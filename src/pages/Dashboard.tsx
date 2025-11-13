@@ -2,26 +2,75 @@ import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { StatCard } from "@/components/StatCard";
 import { Users, FileText, CheckCircle, DollarSign, FileSearch, TrendingUp } from "lucide-react";
-import { api, DashboardStats } from "@/lib/api";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+interface DashboardKPIs {
+  total_clientes: number;
+  total_propostas: number;
+  propostas_aprovadas: number;
+  propostas_pendentes: number;
+  propostas_analise: number;
+  valor_total_aprovado: number;
+  ticket_medio: number;
+  taxa_aprovacao: number;
+}
+
 export default function Dashboard() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [stats, setStats] = useState<DashboardKPIs | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const loadStats = async () => {
-      try {
-        const data = await api.getDashboardStats();
-        setStats(data);
-      } catch (error) {
-        toast.error("Erro ao carregar estatísticas");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const loadStats = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
 
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('empresa_id')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile?.empresa_id) {
+        throw new Error('Empresa não encontrada');
+      }
+
+      const { data, error } = await supabase
+        .rpc('get_dashboard_kpis', { _empresa_id: profile.empresa_id });
+
+      if (error) throw error;
+
+      if (data && typeof data === 'object') {
+        setStats(data as unknown as DashboardKPIs);
+      }
+    } catch (error: any) {
+      toast.error("Erro ao carregar estatísticas: " + error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadStats();
+
+    // Atualizar em tempo real quando houver mudanças
+    const channel = supabase
+      .channel('dashboard-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'clientes' },
+        () => loadStats()
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'propostas' },
+        () => loadStats()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   if (isLoading) {
@@ -51,64 +100,60 @@ export default function Dashboard() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatCard
             title="Total de Clientes"
-            value={stats?.totalClients || 0}
+            value={stats?.total_clientes || 0}
             icon={Users}
             description="Clientes cadastrados"
-            trend={{ value: 12, isPositive: true }}
           />
           <StatCard
             title="Total de Propostas"
-            value={stats?.totalProposals || 0}
+            value={stats?.total_propostas || 0}
             icon={FileText}
             description="Propostas cadastradas"
-            trend={{ value: 8, isPositive: true }}
           />
           <StatCard
             title="Propostas em Análise"
-            value={stats?.inAnalysisProposals || 0}
+            value={stats?.propostas_analise || 0}
             icon={FileSearch}
             description="Aguardando análise"
           />
           <StatCard
             title="Taxa de Aprovação"
-            value={`${stats?.approvalRate || 0}%`}
+            value={`${(stats?.taxa_aprovacao || 0).toFixed(1)}%`}
             icon={TrendingUp}
             description="Taxa de aprovação"
-            trend={{ value: 5, isPositive: true }}
           />
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatCard
             title="Propostas Aprovadas"
-            value={stats?.approvedProposals || 0}
+            value={stats?.propostas_aprovadas || 0}
             icon={CheckCircle}
-            description="Aprovadas este mês"
-            trend={{ value: 15, isPositive: true }}
+            description="Aprovadas"
           />
           <StatCard
             title="Ticket Médio"
             value={new Intl.NumberFormat('pt-BR', {
               style: 'currency',
               currency: 'BRL',
-            }).format(stats?.avgTicket || 0)}
+            }).format(stats?.ticket_medio || 0)}
             icon={DollarSign}
             description="Valor médio aprovado"
           />
           <StatCard
-            title="Valor Total"
+            title="Valor Total Aprovado"
             value={new Intl.NumberFormat('pt-BR', {
               style: 'currency',
               currency: 'BRL',
-            }).format(stats?.totalAmount || 0)}
+            }).format(stats?.valor_total_aprovado || 0)}
             icon={DollarSign}
-            description="Em propostas ativas"
+            description="Total aprovado"
           />
           <StatCard
-            title="Abertas"
-            value={stats?.openProposals || 0}
+            title="Pendentes"
+            value={stats?.propostas_pendentes || 0}
             icon={FileText}
-            description="Propostas abertas"
+            description="Propostas pendentes"
           />
         </div>
 
@@ -144,18 +189,16 @@ export default function Dashboard() {
             <h3 className="text-lg font-semibold mb-4">Status das Propostas</h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm">Abertas</span>
-                <span className="text-sm font-semibold">{stats?.openProposals || 0}</span>
+                <span className="text-sm">Pendentes</span>
+                <span className="text-sm font-semibold">{stats?.propostas_pendentes || 0}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm">Em Análise</span>
-                <span className="text-sm font-semibold">
-                  {(stats?.totalProposals || 0) - (stats?.openProposals || 0) - (stats?.approvedProposals || 0)}
-                </span>
+                <span className="text-sm font-semibold">{stats?.propostas_analise || 0}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm">Aprovadas</span>
-                <span className="text-sm font-semibold text-success">{stats?.approvedProposals || 0}</span>
+                <span className="text-sm font-semibold text-success">{stats?.propostas_aprovadas || 0}</span>
               </div>
             </div>
           </div>
