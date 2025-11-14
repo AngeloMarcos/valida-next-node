@@ -75,6 +75,7 @@ export type Database = {
       }
       bancos: {
         Row: {
+          ativo: boolean | null
           cnpj: string | null
           created_at: string | null
           email: string | null
@@ -84,6 +85,7 @@ export type Database = {
           telefone: string | null
         }
         Insert: {
+          ativo?: boolean | null
           cnpj?: string | null
           created_at?: string | null
           email?: string | null
@@ -93,6 +95,7 @@ export type Database = {
           telefone?: string | null
         }
         Update: {
+          ativo?: boolean | null
           cnpj?: string | null
           created_at?: string | null
           email?: string | null
@@ -113,6 +116,7 @@ export type Database = {
       }
       clientes: {
         Row: {
+          ativo: boolean | null
           cpf: string | null
           created_at: string | null
           email: string | null
@@ -121,6 +125,7 @@ export type Database = {
           nome: string | null
         }
         Insert: {
+          ativo?: boolean | null
           cpf?: string | null
           created_at?: string | null
           email?: string | null
@@ -129,6 +134,7 @@ export type Database = {
           nome?: string | null
         }
         Update: {
+          ativo?: boolean | null
           cpf?: string | null
           created_at?: string | null
           email?: string | null
@@ -142,6 +148,136 @@ export type Database = {
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comissoes: {
+        Row: {
+          contrato_id: string | null
+          created_at: string | null
+          data_previsao: string | null
+          data_recebimento: string | null
+          empresa_id: string | null
+          id: string
+          observacao: string | null
+          percentual_comissao: number | null
+          proposta_id: string
+          status_recebimento: string | null
+          updated_at: string | null
+          usuario_id: string | null
+          valor_comissao: number
+        }
+        Insert: {
+          contrato_id?: string | null
+          created_at?: string | null
+          data_previsao?: string | null
+          data_recebimento?: string | null
+          empresa_id?: string | null
+          id?: string
+          observacao?: string | null
+          percentual_comissao?: number | null
+          proposta_id: string
+          status_recebimento?: string | null
+          updated_at?: string | null
+          usuario_id?: string | null
+          valor_comissao: number
+        }
+        Update: {
+          contrato_id?: string | null
+          created_at?: string | null
+          data_previsao?: string | null
+          data_recebimento?: string | null
+          empresa_id?: string | null
+          id?: string
+          observacao?: string | null
+          percentual_comissao?: number | null
+          proposta_id?: string
+          status_recebimento?: string | null
+          updated_at?: string | null
+          usuario_id?: string | null
+          valor_comissao?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comissoes_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos_apolices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comissoes_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comissoes_proposta_id_fkey"
+            columns: ["proposta_id"]
+            isOneToOne: false
+            referencedRelation: "propostas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contratos_apolices: {
+        Row: {
+          created_at: string | null
+          data_inicio: string | null
+          data_vigencia_fim: string | null
+          empresa_id: string | null
+          id: string
+          numero_apolice: string | null
+          numero_contrato: string | null
+          proposta_id: string
+          status_contrato: string | null
+          updated_at: string | null
+          usuario_id: string | null
+          valor_contrato: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_inicio?: string | null
+          data_vigencia_fim?: string | null
+          empresa_id?: string | null
+          id?: string
+          numero_apolice?: string | null
+          numero_contrato?: string | null
+          proposta_id: string
+          status_contrato?: string | null
+          updated_at?: string | null
+          usuario_id?: string | null
+          valor_contrato?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          data_inicio?: string | null
+          data_vigencia_fim?: string | null
+          empresa_id?: string | null
+          id?: string
+          numero_apolice?: string | null
+          numero_contrato?: string | null
+          proposta_id?: string
+          status_contrato?: string | null
+          updated_at?: string | null
+          usuario_id?: string | null
+          valor_contrato?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contratos_apolices_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contratos_apolices_proposta_id_fkey"
+            columns: ["proposta_id"]
+            isOneToOne: false
+            referencedRelation: "propostas"
             referencedColumns: ["id"]
           },
         ]
@@ -169,6 +305,7 @@ export type Database = {
       }
       produtos: {
         Row: {
+          ativo: boolean | null
           banco_id: string | null
           created_at: string | null
           empresa_id: string | null
@@ -179,6 +316,7 @@ export type Database = {
           tipo_credito: string | null
         }
         Insert: {
+          ativo?: boolean | null
           banco_id?: string | null
           created_at?: string | null
           empresa_id?: string | null
@@ -189,6 +327,7 @@ export type Database = {
           tipo_credito?: string | null
         }
         Update: {
+          ativo?: boolean | null
           banco_id?: string | null
           created_at?: string | null
           empresa_id?: string | null
@@ -250,6 +389,225 @@ export type Database = {
           },
         ]
       }
+      proposta_anexos: {
+        Row: {
+          created_at: string | null
+          empresa_id: string | null
+          id: string
+          nome_arquivo: string
+          proposta_id: string
+          tamanho_bytes: number | null
+          tipo_arquivo: string | null
+          url_arquivo: string
+          usuario_id: string | null
+          usuario_nome: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          empresa_id?: string | null
+          id?: string
+          nome_arquivo: string
+          proposta_id: string
+          tamanho_bytes?: number | null
+          tipo_arquivo?: string | null
+          url_arquivo: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          empresa_id?: string | null
+          id?: string
+          nome_arquivo?: string
+          proposta_id?: string
+          tamanho_bytes?: number | null
+          tipo_arquivo?: string | null
+          url_arquivo?: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposta_anexos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposta_anexos_proposta_id_fkey"
+            columns: ["proposta_id"]
+            isOneToOne: false
+            referencedRelation: "propostas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proposta_atividades: {
+        Row: {
+          created_at: string | null
+          data_agendamento: string | null
+          data_atividade: string | null
+          descricao: string
+          empresa_id: string | null
+          id: string
+          proposta_id: string
+          status: string | null
+          tipo_atividade: string
+          usuario_id: string | null
+          usuario_nome: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_agendamento?: string | null
+          data_atividade?: string | null
+          descricao: string
+          empresa_id?: string | null
+          id?: string
+          proposta_id: string
+          status?: string | null
+          tipo_atividade: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data_agendamento?: string | null
+          data_atividade?: string | null
+          descricao?: string
+          empresa_id?: string | null
+          id?: string
+          proposta_id?: string
+          status?: string | null
+          tipo_atividade?: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposta_atividades_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposta_atividades_proposta_id_fkey"
+            columns: ["proposta_id"]
+            isOneToOne: false
+            referencedRelation: "propostas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proposta_documentos: {
+        Row: {
+          created_at: string | null
+          data_recebimento: string | null
+          empresa_id: string | null
+          id: string
+          nome_documento: string
+          obrigatorio: boolean | null
+          observacao: string | null
+          proposta_id: string
+          status_documento: string | null
+          updated_at: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_recebimento?: string | null
+          empresa_id?: string | null
+          id?: string
+          nome_documento: string
+          obrigatorio?: boolean | null
+          observacao?: string | null
+          proposta_id: string
+          status_documento?: string | null
+          updated_at?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data_recebimento?: string | null
+          empresa_id?: string | null
+          id?: string
+          nome_documento?: string
+          obrigatorio?: boolean | null
+          observacao?: string | null
+          proposta_id?: string
+          status_documento?: string | null
+          updated_at?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposta_documentos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposta_documentos_proposta_id_fkey"
+            columns: ["proposta_id"]
+            isOneToOne: false
+            referencedRelation: "propostas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proposta_historico: {
+        Row: {
+          created_at: string | null
+          empresa_id: string | null
+          id: string
+          observacao: string | null
+          proposta_id: string
+          status_anterior: string | null
+          status_novo: string
+          usuario_id: string | null
+          usuario_nome: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          empresa_id?: string | null
+          id?: string
+          observacao?: string | null
+          proposta_id: string
+          status_anterior?: string | null
+          status_novo: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          empresa_id?: string | null
+          id?: string
+          observacao?: string | null
+          proposta_id?: string
+          status_anterior?: string | null
+          status_novo?: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposta_historico_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposta_historico_proposta_id_fkey"
+            columns: ["proposta_id"]
+            isOneToOne: false
+            referencedRelation: "propostas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       propostas: {
         Row: {
           banco_id: string | null
@@ -261,6 +619,7 @@ export type Database = {
           observacoes: string | null
           produto_id: string | null
           status: string | null
+          usuario_id: string | null
           valor: number | null
         }
         Insert: {
@@ -273,6 +632,7 @@ export type Database = {
           observacoes?: string | null
           produto_id?: string | null
           status?: string | null
+          usuario_id?: string | null
           valor?: number | null
         }
         Update: {
@@ -285,6 +645,7 @@ export type Database = {
           observacoes?: string | null
           produto_id?: string | null
           status?: string | null
+          usuario_id?: string | null
           valor?: number | null
         }
         Relationships: [
