@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, FileText, LogOut, Building2, Package, UserCog, Activity } from "lucide-react";
+import { LayoutDashboard, Users, FileText, LogOut, Building2, Package, UserCog, Activity, Menu } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -11,6 +11,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarFooter,
+  SidebarHeader,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,7 @@ const financialItems = [
 ];
 
 export function AppSidebar() {
-  const { state } = useSidebar();
+  const { state, toggleSidebar } = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut, isAdmin, isGerente } = useAuth();
@@ -45,20 +46,32 @@ export function AppSidebar() {
 
   return (
     <Sidebar className={collapsed ? "w-16" : "w-64"} collapsible="icon">
-      <SidebarContent>
-        <div className="p-4 border-b border-sidebar-border">
+      <SidebarHeader className="border-b border-sidebar-border">
+        <div className="flex items-center justify-between p-4">
           {!collapsed && (
             <h2 className="text-lg font-bold text-sidebar-foreground">ValidaCRM</h2>
           )}
           {collapsed && (
-            <div className="w-8 h-8 bg-sidebar-primary rounded flex items-center justify-center">
-              <span className="text-sidebar-primary-foreground font-bold text-sm">V</span>
+            <div className="w-8 h-8 bg-primary rounded flex items-center justify-center mx-auto">
+              <span className="text-primary-foreground font-bold text-sm">V</span>
             </div>
           )}
+          {!collapsed && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleSidebar}
+              className="h-8 w-8 text-sidebar-foreground hover:bg-sidebar-accent"
+            >
+              <Menu className="h-4 w-4" />
+            </Button>
+          )}
         </div>
+      </SidebarHeader>
 
+      <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>CRM</SidebarGroupLabel>
+          {!collapsed && <SidebarGroupLabel>CRM</SidebarGroupLabel>}
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => {
@@ -73,7 +86,11 @@ export function AppSidebar() {
                 
                 return (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={currentPath === item.url}>
+                    <SidebarMenuButton 
+                      asChild 
+                      isActive={currentPath === item.url}
+                      tooltip={collapsed ? item.title : undefined}
+                    >
                       <NavLink
                         to={item.url}
                         className="flex items-center gap-3 hover:bg-sidebar-accent"
@@ -90,12 +107,16 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>FINANCEIRO</SidebarGroupLabel>
+          {!collapsed && <SidebarGroupLabel>FINANCEIRO</SidebarGroupLabel>}
           <SidebarGroupContent>
             <SidebarMenu>
               {financialItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={currentPath === item.url}>
+                  <SidebarMenuButton 
+                    asChild 
+                    isActive={currentPath === item.url}
+                    tooltip={collapsed ? item.title : undefined}
+                  >
                     <NavLink
                       to={item.url}
                       className="flex items-center gap-3 hover:bg-sidebar-accent"
@@ -112,14 +133,29 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
-        <Button
-          variant="ghost"
-          className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent"
-          onClick={handleLogout}
-        >
-          <LogOut className="h-4 w-4" />
-          {!collapsed && <span className="ml-3">Sair</span>}
-        </Button>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton 
+              onClick={handleLogout}
+              tooltip={collapsed ? "Sair" : undefined}
+              className="w-full text-sidebar-foreground hover:bg-sidebar-accent"
+            >
+              <LogOut className="h-4 w-4" />
+              {!collapsed && <span>Sair</span>}
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          {collapsed && (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={toggleSidebar}
+                tooltip="Expandir menu"
+                className="w-full text-sidebar-foreground hover:bg-sidebar-accent"
+              >
+                <Menu className="h-4 w-4" />
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
+        </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
   );
