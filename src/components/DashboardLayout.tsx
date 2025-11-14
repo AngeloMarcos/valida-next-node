@@ -4,6 +4,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -25,8 +26,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   Sistema de Gestão ValidaCRM
                 </h1>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground hidden md:block">{user?.email}</span>
+                <ThemeToggle />
                 <Button variant="outline" size="sm" onClick={signOut}>
                   <LogOut className="h-4 w-4 md:mr-2" />
                   <span className="hidden md:inline">Sair</span>
