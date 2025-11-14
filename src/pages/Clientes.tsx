@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +17,9 @@ import { ClientesPagination } from '@/components/clientes/ClientesPagination';
 import { useClientes, Cliente, ClienteFormData } from '@/hooks/useClientes';
 
 export default function Clientes() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const openNew = searchParams.get('new');
+  
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCliente, setEditingCliente] = useState<Cliente | undefined>();
@@ -44,6 +48,14 @@ export default function Clientes() {
   useEffect(() => {
     loadClientes();
   }, [currentPage, searchTerm]);
+
+  useEffect(() => {
+    if (openNew === 'true') {
+      handleOpenDialog();
+      searchParams.delete('new');
+      setSearchParams(searchParams);
+    }
+  }, [openNew]);
 
   const handleSubmit = async (data: ClienteFormData) => {
     let success: boolean;

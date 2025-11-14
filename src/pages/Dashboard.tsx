@@ -173,22 +173,17 @@ export default function Dashboard() {
             <QuickActionCard
               title="Nova Proposta"
               icon={Plus}
-              onClick={() => navigate('/propostas')}
+              onClick={() => navigate('/propostas?new=true')}
             />
             <QuickActionCard
               title="Novo Cliente"
               icon={UserPlus}
-              onClick={() => navigate('/clientes')}
+              onClick={() => navigate('/clientes?new=true')}
             />
             <QuickActionCard
               title="Consultar Propostas"
               icon={Search}
               onClick={() => navigate('/propostas')}
-            />
-            <QuickActionCard
-              title="Registrar Atividade"
-              icon={Activity}
-              onClick={() => navigate('/activity-log')}
             />
           </div>
         </div>

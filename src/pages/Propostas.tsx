@@ -29,6 +29,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 export default function Propostas() {
   const [searchParams, setSearchParams] = useSearchParams();
   const editId = searchParams.get('edit');
+  const openNew = searchParams.get('new');
 
   const {
     loading,
@@ -78,8 +79,12 @@ export default function Propostas() {
   useEffect(() => {
     if (editId) {
       handleEditFromUrl(editId);
+    } else if (openNew === 'true') {
+      handleCreate();
+      searchParams.delete('new');
+      setSearchParams(searchParams);
     }
-  }, [editId]);
+  }, [editId, openNew]);
 
   const handleEditFromUrl = async (id: string) => {
     const proposta = await getPropostaById(id);
