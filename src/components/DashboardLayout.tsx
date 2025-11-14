@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -36,6 +37,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </div>
             </header>
             <main className="flex-1 p-6 overflow-auto">{children}</main>
+            <WhatsAppButton />
           </div>
         </div>
       </SidebarProvider>
