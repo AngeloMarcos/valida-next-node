@@ -14,9 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['DM Sans', 'sans-serif'],
-        serif: ['Lora', 'serif'],
-        mono: ['IBM Plex Mono', 'monospace'],
+        sans: ['Outfit', 'sans-serif'],
+        serif: ['ui-serif', 'Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif'],
+        mono: ['monospace'],
       },
       colors: {
         border: "hsl(var(--border))",
