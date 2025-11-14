@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { StatCard } from "@/components/StatCard";
-import { Users, FileText, CheckCircle, DollarSign, FileSearch, TrendingUp } from "lucide-react";
+import { QuickActionCard } from "@/components/QuickActionCard";
+import { Users, FileText, CheckCircle, DollarSign, FileSearch, TrendingUp, Plus, UserPlus, Search, Activity } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -17,6 +19,7 @@ interface DashboardKPIs {
 }
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardKPIs | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -102,24 +105,28 @@ export default function Dashboard() {
             title="Total de Clientes"
             value={stats?.total_clientes || 0}
             icon={Users}
+            iconColor="primary"
             description="Clientes cadastrados"
           />
           <StatCard
             title="Total de Propostas"
             value={stats?.total_propostas || 0}
             icon={FileText}
+            iconColor="primary"
             description="Propostas cadastradas"
           />
           <StatCard
             title="Propostas em Análise"
             value={stats?.propostas_analise || 0}
             icon={FileSearch}
+            iconColor="warning"
             description="Aguardando análise"
           />
           <StatCard
             title="Taxa de Aprovação"
             value={`${(stats?.taxa_aprovacao || 0).toFixed(1)}%`}
             icon={TrendingUp}
+            iconColor="primary"
             description="Taxa de aprovação"
           />
         </div>
@@ -129,6 +136,7 @@ export default function Dashboard() {
             title="Propostas Aprovadas"
             value={stats?.propostas_aprovadas || 0}
             icon={CheckCircle}
+            iconColor="primary"
             description="Aprovadas"
           />
           <StatCard
@@ -138,6 +146,7 @@ export default function Dashboard() {
               currency: 'BRL',
             }).format(stats?.ticket_medio || 0)}
             icon={DollarSign}
+            iconColor="primary"
             description="Valor médio aprovado"
           />
           <StatCard
@@ -147,6 +156,7 @@ export default function Dashboard() {
               currency: 'BRL',
             }).format(stats?.valor_total_aprovado || 0)}
             icon={DollarSign}
+            iconColor="primary"
             description="Total aprovado"
           />
           <StatCard
@@ -155,6 +165,32 @@ export default function Dashboard() {
             icon={FileText}
             description="Propostas pendentes"
           />
+        </div>
+
+        <div className="space-y-3">
+          <h3 className="text-lg font-semibold">Ações Rápidas</h3>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <QuickActionCard
+              title="Nova Proposta"
+              icon={Plus}
+              onClick={() => navigate('/propostas')}
+            />
+            <QuickActionCard
+              title="Novo Cliente"
+              icon={UserPlus}
+              onClick={() => navigate('/clientes')}
+            />
+            <QuickActionCard
+              title="Consultar Propostas"
+              icon={Search}
+              onClick={() => navigate('/propostas')}
+            />
+            <QuickActionCard
+              title="Registrar Atividade"
+              icon={Activity}
+              onClick={() => navigate('/activity-log')}
+            />
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
