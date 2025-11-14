@@ -48,22 +48,26 @@ export function AppSidebar() {
     <Sidebar className={collapsed ? "w-16" : "w-64"} collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">
         <div className="flex items-center justify-between p-4">
-          {!collapsed && (
-            <h2 className="text-lg font-bold text-sidebar-foreground">ValidaCRM</h2>
-          )}
-          {collapsed && (
-            <div className="w-8 h-8 bg-primary rounded flex items-center justify-center mx-auto">
-              <span className="text-primary-foreground font-bold text-sm">V</span>
-            </div>
-          )}
-          {!collapsed && (
+          {!collapsed ? (
+            <>
+              <h2 className="text-lg font-bold text-sidebar-foreground">ValidaCRM</h2>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleSidebar}
+                className="h-8 w-8 text-sidebar-foreground hover:bg-sidebar-accent"
+              >
+                <Menu className="h-4 w-4" />
+              </Button>
+            </>
+          ) : (
             <Button
               variant="ghost"
               size="icon"
               onClick={toggleSidebar}
-              className="h-8 w-8 text-sidebar-foreground hover:bg-sidebar-accent"
+              className="h-10 w-10 mx-auto text-sidebar-foreground hover:bg-sidebar-accent"
             >
-              <Menu className="h-4 w-4" />
+              <Menu className="h-5 w-5" />
             </Button>
           )}
         </div>
@@ -144,17 +148,6 @@ export function AppSidebar() {
               {!collapsed && <span>Sair</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
-          {collapsed && (
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                onClick={toggleSidebar}
-                tooltip="Expandir menu"
-                className="w-full text-sidebar-foreground hover:bg-sidebar-accent"
-              >
-                <Menu className="h-4 w-4" />
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          )}
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
