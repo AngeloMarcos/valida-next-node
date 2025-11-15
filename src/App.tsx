@@ -14,6 +14,7 @@ import Produtos from "./pages/Produtos";
 import Users from "./pages/Users";
 import ActivityLog from "./pages/ActivityLog";
 import WhatsApp from "./pages/WhatsApp";
+import WhatsAppConversas from "./pages/WhatsAppConversas";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/users" element={<Users />} />
             <Route path="/activity-log" element={<ActivityLog />} />
             <Route path="/whatsapp" element={<WhatsApp />} />
+            <Route path="/whatsapp/conversas" element={<WhatsAppConversas />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
