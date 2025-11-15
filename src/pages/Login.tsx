@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import * as yup from "yup";
-import logoCompleto from "@/assets/logo-completo.webp";
+import logoIcon from "@/assets/logo-icon.png";
 
 const loginSchema = yup.object({
   email: yup.string().email("E-mail inválido").required("E-mail é obrigatório"),
@@ -102,7 +102,7 @@ export default function Login() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-4">
           <div className="flex items-center justify-center">
-            <img src={logoCompleto} alt="AprovaCRM" className="h-12" />
+            <img src={logoIcon} alt="AprovaCRM" className="h-20 w-20" />
           </div>
           <CardTitle className="text-2xl text-center">Sistema de Gestão</CardTitle>
           <CardDescription className="text-center">

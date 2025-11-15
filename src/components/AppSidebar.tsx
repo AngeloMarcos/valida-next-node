@@ -1,8 +1,8 @@
 import { LayoutDashboard, Users, FileText, LogOut, Building2, Package, UserCog, Activity, Menu, MessageCircle } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
-import logoCompleto from "@/assets/logo-completo.webp";
-import logoIcon from "@/assets/logo-icon.webp";
+import logoCompleto from "@/assets/logo-completo.png";
+import logoIcon from "@/assets/logo-icon.png";
 import {
   Sidebar,
   SidebarContent,
