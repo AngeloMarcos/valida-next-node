@@ -4,6 +4,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
+import { WhatsAppFloatingButton } from "@/components/WhatsAppFloatingButton";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -36,6 +37,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <main className="flex-1 p-6 overflow-auto">{children}</main>
           </div>
         </div>
+        <WhatsAppFloatingButton />
       </SidebarProvider>
     </ProtectedRoute>
   );

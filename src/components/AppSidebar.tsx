@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, FileText, LogOut, Building2, Package, UserCog, Activity, Menu } from "lucide-react";
+import { LayoutDashboard, Users, FileText, LogOut, Building2, Package, UserCog, Activity, Menu, MessageCircle } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -22,6 +22,7 @@ const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Clientes", url: "/clientes", icon: Users },
   { title: "Propostas", url: "/propostas", icon: FileText },
+  { title: "WhatsApp", url: "/whatsapp", icon: MessageCircle },
   { title: "Usuários", url: "/users", icon: UserCog, adminOnly: true },
   { title: "Log de Atividades", url: "/activity-log", icon: Activity, managerAccess: true },
 ];
