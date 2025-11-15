@@ -51,12 +51,12 @@ export function AppSidebar() {
     <Sidebar className={collapsed ? "w-16" : "w-64"} collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border bg-sidebar">
         {!collapsed ? (
-          <div className="flex items-center justify-between px-4 py-4">
+          <div className="flex items-center justify-between px-4 py-5">
             <div className="flex-1 flex items-center justify-start">
               <img 
                 src={logoCompleto} 
                 alt="AprovaCRM" 
-                className="h-9 w-auto object-contain max-w-[180px]" 
+                className="h-14 w-auto object-contain max-w-[200px]" 
               />
             </div>
             <Button
