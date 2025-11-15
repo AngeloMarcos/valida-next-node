@@ -1,41 +1,63 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { ConversationList } from '@/components/whatsapp/ConversationList';
 import { ChatWindow } from '@/components/whatsapp/ChatWindow';
-import { Conversation, Message } from '@/types/whatsapp';
-import { mockConversations } from '@/data/mockWhatsApp';
+import { Message } from '@/types/whatsapp';
+import { useConversas } from '@/hooks/useConversas';
+import { useMensagens } from '@/hooks/useMensagens';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 
 export default function WhatsAppConversas() {
-  const [conversations, setConversations] = useState<Conversation[]>(mockConversations);
+  const { conversations, loading, markAsRead } = useConversas();
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [showChatOnMobile, setShowChatOnMobile] = useState(false);
 
   const selectedConversation = conversations.find((c) => c.id === selectedConversationId) || null;
+  
+  const { messages, sending, sendMessage } = useMensagens(selectedConversationId);
 
-  const handleSelectConversation = (id: string) => {
+  useEffect(() => {
+    if (selectedConversation && messages.length > 0) {
+      const updatedConversation = {
+        ...selectedConversation,
+        messages
+      };
+    }
+  }, [messages, selectedConversation]);
+
+  const handleSelectConversation = async (id: string) => {
     setSelectedConversationId(id);
     setShowChatOnMobile(true);
+    
+    await markAsRead(id);
   };
 
-  const handleSendMessage = (message: Message) => {
-    setConversations((prev) =>
-      prev.map((conv) => {
-        if (conv.id === message.conversationId) {
-          return {
-            ...conv,
-            messages: [...conv.messages, message],
-            lastMessage: message.text,
-            timestamp: message.timestamp
-          };
-        }
-        return conv;
-      })
+  const handleSendMessage = async (message: Message) => {
+    if (!selectedConversation) return;
+
+    const success = await sendMessage(
+      message.text,
+      selectedConversation.contact.phone
     );
+
+    if (!success) {
+      console.error('Falha ao enviar mensagem');
+    }
   };
 
   const handleBackToList = () => {
     setShowChatOnMobile(false);
   };
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-[calc(100vh-6rem)]">
+          <LoadingSpinner />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -50,8 +72,9 @@ export default function WhatsAppConversas() {
             />
           </div>
           <ChatWindow
-            conversation={selectedConversation}
+            conversation={selectedConversation ? { ...selectedConversation, messages } : null}
             onSendMessage={handleSendMessage}
+            sending={sending}
           />
         </div>
 
@@ -65,9 +88,10 @@ export default function WhatsAppConversas() {
             />
           ) : (
             <ChatWindow
-              conversation={selectedConversation}
+              conversation={selectedConversation ? { ...selectedConversation, messages } : null}
               onSendMessage={handleSendMessage}
               onBack={handleBackToList}
+              sending={sending}
             />
           )}
         </div>

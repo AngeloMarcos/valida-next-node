@@ -282,6 +282,59 @@ export type Database = {
           },
         ]
       }
+      conversas: {
+        Row: {
+          created_at: string | null
+          empresa_id: string
+          id: string
+          is_starred: boolean | null
+          nome: string
+          origem: string | null
+          status: string | null
+          telefone: string
+          ultima_data: string | null
+          ultimo_texto: string | null
+          unread: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          empresa_id: string
+          id?: string
+          is_starred?: boolean | null
+          nome: string
+          origem?: string | null
+          status?: string | null
+          telefone: string
+          ultima_data?: string | null
+          ultimo_texto?: string | null
+          unread?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          empresa_id?: string
+          id?: string
+          is_starred?: boolean | null
+          nome?: string
+          origem?: string | null
+          status?: string | null
+          telefone?: string
+          ultima_data?: string | null
+          ultimo_texto?: string | null
+          unread?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       empresas: {
         Row: {
           cnpj: string | null
@@ -302,6 +355,54 @@ export type Database = {
           nome?: string
         }
         Relationships: []
+      }
+      mensagens: {
+        Row: {
+          conversa_id: string
+          created_at: string | null
+          data: string | null
+          empresa_id: string
+          id: string
+          mensagem: string
+          status: string | null
+          tipo: string
+        }
+        Insert: {
+          conversa_id: string
+          created_at?: string | null
+          data?: string | null
+          empresa_id: string
+          id?: string
+          mensagem: string
+          status?: string | null
+          tipo: string
+        }
+        Update: {
+          conversa_id?: string
+          created_at?: string | null
+          data?: string | null
+          empresa_id?: string
+          id?: string
+          mensagem?: string
+          status?: string | null
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mensagens_conversa_id_fkey"
+            columns: ["conversa_id"]
+            isOneToOne: false
+            referencedRelation: "conversas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mensagens_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       produtos: {
         Row: {

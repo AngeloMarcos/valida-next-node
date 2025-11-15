@@ -7,9 +7,10 @@ import { Message } from '@/types/whatsapp';
 interface ChatInputProps {
   conversationId: string;
   onSendMessage: (message: Message) => void;
+  sending?: boolean;
 }
 
-export function ChatInput({ conversationId, onSendMessage }: ChatInputProps) {
+export function ChatInput({ conversationId, onSendMessage, sending = false }: ChatInputProps) {
   const [inputValue, setInputValue] = useState('');
 
   const handleSend = () => {
@@ -60,9 +61,13 @@ export function ChatInput({ conversationId, onSendMessage }: ChatInputProps) {
           size="icon"
           className="shrink-0 bg-[#25D366] hover:bg-[#128C7E] text-white"
           onClick={handleSend}
-          disabled={!inputValue.trim()}
+          disabled={!inputValue.trim() || sending}
         >
-          <Send className="h-5 w-5" />
+          {sending ? (
+            <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <Send className="h-5 w-5" />
+          )}
         </Button>
       </div>
     </div>

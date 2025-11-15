@@ -9,9 +9,10 @@ interface ChatWindowProps {
   conversation: Conversation | null;
   onSendMessage: (message: Message) => void;
   onBack?: () => void;
+  sending?: boolean;
 }
 
-export function ChatWindow({ conversation, onSendMessage, onBack }: ChatWindowProps) {
+export function ChatWindow({ conversation, onSendMessage, onBack, sending = false }: ChatWindowProps) {
   if (!conversation) {
     return (
       <div className="flex-1 flex items-center justify-center bg-muted/10">
@@ -31,6 +32,7 @@ export function ChatWindow({ conversation, onSendMessage, onBack }: ChatWindowPr
       <ChatInput
         conversationId={conversation.id}
         onSendMessage={onSendMessage}
+        sending={sending}
       />
     </div>
   );
