@@ -58,12 +58,14 @@ export default function Propostas() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [bancoFilter, setBancoFilter] = useState<string>('all');
+  const [tipoFilter, setTipoFilter] = useState<string>('all');
 
   const loadPropostas = async (page: number = currentPage, size: number = pageSize) => {
     const filters: PropostaFilters = {
       search: searchTerm || undefined,
       status: statusFilter !== 'all' ? statusFilter : undefined,
       banco_id: bancoFilter !== 'all' ? bancoFilter : undefined,
+      tipo_proposta: tipoFilter !== 'all' ? (tipoFilter as 'credito' | 'consorcio' | 'seguro') : undefined,
     };
 
     const result = await fetchPropostas(page, size, filters);
@@ -74,7 +76,7 @@ export default function Propostas() {
 
   useEffect(() => {
     loadPropostas();
-  }, [currentPage, pageSize, searchTerm, statusFilter, bancoFilter]);
+  }, [currentPage, pageSize, searchTerm, statusFilter, bancoFilter, tipoFilter]);
 
   useEffect(() => {
     if (editId) {
@@ -151,6 +153,7 @@ export default function Propostas() {
     setSearchTerm('');
     setStatusFilter('all');
     setBancoFilter('all');
+    setTipoFilter('all');
     setCurrentPage(1);
   };
 
@@ -230,7 +233,19 @@ export default function Propostas() {
                 </SelectContent>
               </Select>
 
-              {(searchTerm || statusFilter !== 'all' || bancoFilter !== 'all') && (
+              <Select value={tipoFilter} onValueChange={setTipoFilter}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos tipos</SelectItem>
+                  <SelectItem value="credito">Crédito</SelectItem>
+                  <SelectItem value="consorcio">Consórcio</SelectItem>
+                  <SelectItem value="seguro">Seguro</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {(searchTerm || statusFilter !== 'all' || bancoFilter !== 'all' || tipoFilter !== 'all') && (
                 <Button variant="outline" size="sm" onClick={handleClearFilters}>
                   Limpar
                 </Button>

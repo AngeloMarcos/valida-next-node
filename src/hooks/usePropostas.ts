@@ -13,6 +13,8 @@ export interface Proposta {
   observacoes: string | null;
   finalidade: string | null;
   status: string;
+  tipo_proposta: 'credito' | 'consorcio' | 'seguro';
+  detalhes_produto: any;
   clientes?: {
     id: string;
     nome: string;
@@ -37,12 +39,15 @@ export interface PropostaFormData {
   finalidade?: string;
   observacoes?: string;
   status: string;
+  tipo_proposta: 'credito' | 'consorcio' | 'seguro';
+  detalhes_produto?: any;
 }
 
 export interface PropostaFilters {
   status?: string;
   banco_id?: string;
   search?: string;
+  tipo_proposta?: 'credito' | 'consorcio' | 'seguro';
 }
 
 export function usePropostas() {
@@ -77,6 +82,9 @@ export function usePropostas() {
       }
       if (filters?.banco_id) {
         query = query.eq('banco_id', filters.banco_id);
+      }
+      if (filters?.tipo_proposta) {
+        query = query.eq('tipo_proposta', filters.tipo_proposta);
       }
       if (filters?.search) {
         // Search in related cliente name

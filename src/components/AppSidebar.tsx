@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, FileText, LogOut, Building2, Package, UserCog, Activity, Menu, MessageCircle } from "lucide-react";
+import { LayoutDashboard, Users, FileText, LogOut, Building2, Package, UserCog, Activity, Menu, MessageCircle, RefreshCw } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import logoCompleto from "@/assets/logo-completo.png";
@@ -24,6 +24,7 @@ const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Clientes", url: "/clientes", icon: Users },
   { title: "Propostas", url: "/propostas", icon: FileText },
+  { title: "Renovações", url: "/renovacoes", icon: RefreshCw },
   { title: "Conversas WhatsApp", url: "/whatsapp/conversas", icon: MessageCircle },
   { title: "Usuários", url: "/users", icon: UserCog, adminOnly: true },
   { title: "Log de Atividades", url: "/activity-log", icon: Activity, managerAccess: true },

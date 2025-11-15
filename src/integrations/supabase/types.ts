@@ -227,12 +227,17 @@ export type Database = {
           created_at: string | null
           data_inicio: string | null
           data_vigencia_fim: string | null
+          detalhes_produto: Json | null
           empresa_id: string | null
           id: string
           numero_apolice: string | null
           numero_contrato: string | null
           proposta_id: string
           status_contrato: string | null
+          status_cota: string | null
+          tipo_proposta:
+            | Database["public"]["Enums"]["tipo_proposta_enum"]
+            | null
           updated_at: string | null
           usuario_id: string | null
           valor_contrato: number | null
@@ -241,12 +246,17 @@ export type Database = {
           created_at?: string | null
           data_inicio?: string | null
           data_vigencia_fim?: string | null
+          detalhes_produto?: Json | null
           empresa_id?: string | null
           id?: string
           numero_apolice?: string | null
           numero_contrato?: string | null
           proposta_id: string
           status_contrato?: string | null
+          status_cota?: string | null
+          tipo_proposta?:
+            | Database["public"]["Enums"]["tipo_proposta_enum"]
+            | null
           updated_at?: string | null
           usuario_id?: string | null
           valor_contrato?: number | null
@@ -255,12 +265,17 @@ export type Database = {
           created_at?: string | null
           data_inicio?: string | null
           data_vigencia_fim?: string | null
+          detalhes_produto?: Json | null
           empresa_id?: string | null
           id?: string
           numero_apolice?: string | null
           numero_contrato?: string | null
           proposta_id?: string
           status_contrato?: string | null
+          status_cota?: string | null
+          tipo_proposta?:
+            | Database["public"]["Enums"]["tipo_proposta_enum"]
+            | null
           updated_at?: string | null
           usuario_id?: string | null
           valor_contrato?: number | null
@@ -714,12 +729,14 @@ export type Database = {
           banco_id: string | null
           cliente_id: string | null
           data: string | null
+          detalhes_produto: Json | null
           empresa_id: string | null
           finalidade: string | null
           id: string
           observacoes: string | null
           produto_id: string | null
           status: string | null
+          tipo_proposta: Database["public"]["Enums"]["tipo_proposta_enum"]
           usuario_id: string | null
           valor: number | null
         }
@@ -727,12 +744,14 @@ export type Database = {
           banco_id?: string | null
           cliente_id?: string | null
           data?: string | null
+          detalhes_produto?: Json | null
           empresa_id?: string | null
           finalidade?: string | null
           id?: string
           observacoes?: string | null
           produto_id?: string | null
           status?: string | null
+          tipo_proposta?: Database["public"]["Enums"]["tipo_proposta_enum"]
           usuario_id?: string | null
           valor?: number | null
         }
@@ -740,12 +759,14 @@ export type Database = {
           banco_id?: string | null
           cliente_id?: string | null
           data?: string | null
+          detalhes_produto?: Json | null
           empresa_id?: string | null
           finalidade?: string | null
           id?: string
           observacoes?: string | null
           produto_id?: string | null
           status?: string | null
+          tipo_proposta?: Database["public"]["Enums"]["tipo_proposta_enum"]
           usuario_id?: string | null
           valor?: number | null
         }
@@ -899,6 +920,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "gerente" | "agente"
+      tipo_proposta_enum: "credito" | "consorcio" | "seguro"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1027,6 +1049,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "gerente", "agente"],
+      tipo_proposta_enum: ["credito", "consorcio", "seguro"],
     },
   },
 } as const
