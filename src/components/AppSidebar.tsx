@@ -50,33 +50,31 @@ export function AppSidebar() {
   return (
     <Sidebar className={collapsed ? "w-16" : "w-64"} collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">
-        <div className="flex items-center justify-between p-4">
-          {!collapsed ? (
-            <>
-              <img src={logoCompleto} alt="AprovaCRM" className="h-8" />
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleSidebar}
-                className="h-8 w-8 text-sidebar-foreground hover:bg-sidebar-accent"
-              >
-                <Menu className="h-4 w-4" />
-              </Button>
-            </>
-          ) : (
-            <div className="flex flex-col items-center gap-2">
-              <img src={logoIcon} alt="AprovaCRM" className="h-8 w-8" />
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleSidebar}
-                className="h-8 w-8 mx-auto text-sidebar-foreground hover:bg-sidebar-accent"
-              >
-                <Menu className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-        </div>
+        {!collapsed ? (
+          <div className="flex items-center justify-between px-4 py-5">
+            <img src={logoCompleto} alt="AprovaCRM" className="h-10 w-auto object-contain" />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleSidebar}
+              className="h-8 w-8 shrink-0 text-sidebar-foreground hover:bg-sidebar-accent"
+            >
+              <Menu className="h-4 w-4" />
+            </Button>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center py-4 gap-3">
+            <img src={logoIcon} alt="AprovaCRM" className="h-10 w-10 object-contain" />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleSidebar}
+              className="h-8 w-8 text-sidebar-foreground hover:bg-sidebar-accent"
+            >
+              <Menu className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </SidebarHeader>
 
       <SidebarContent>
