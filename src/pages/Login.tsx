@@ -99,13 +99,17 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-accent/10 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-6">
-          <div className="flex items-center justify-center py-4">
-            <img src={logoIcon} alt="AprovaCRM" className="h-32 w-32 object-contain" />
+      <Card className="w-full max-w-md shadow-lg">
+        <CardHeader className="space-y-1 pb-4">
+          <div className="flex items-center justify-center pt-2 pb-3">
+            <img 
+              src={logoIcon} 
+              alt="AprovaCRM" 
+              className="h-20 w-20 object-contain" 
+            />
           </div>
-          <CardTitle className="text-2xl text-center">Sistema de Gestão</CardTitle>
-          <CardDescription className="text-center">
+          <CardTitle className="text-2xl font-bold text-center">AprovaCRM</CardTitle>
+          <CardDescription className="text-center text-base">
             Sistema de Gestão de Propostas
           </CardDescription>
         </CardHeader>
