@@ -22,7 +22,7 @@ const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Clientes", url: "/clientes", icon: Users },
   { title: "Propostas", url: "/propostas", icon: FileText },
-  { title: "WhatsApp", url: "/whatsapp", icon: MessageCircle },
+  { title: "Conversas WhatsApp", url: "/whatsapp/conversas", icon: MessageCircle },
   { title: "Usuários", url: "/users", icon: UserCog, adminOnly: true },
   { title: "Log de Atividades", url: "/activity-log", icon: Activity, managerAccess: true },
 ];
