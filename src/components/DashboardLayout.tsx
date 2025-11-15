@@ -23,7 +23,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <div className="flex items-center gap-4">
                 <SidebarTrigger className="text-foreground hover:bg-accent hover:text-accent-foreground" />
                 <h1 className="text-xl font-semibold text-foreground">
-                  Sistema de Gestão ValidaCRM
+                  Sistema de Gestão AprovaCRM
                 </h1>
               </div>
               <div className="flex items-center gap-4">

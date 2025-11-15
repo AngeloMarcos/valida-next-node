@@ -105,7 +105,7 @@ export default function Login() {
               <span className="text-3xl font-bold text-primary-foreground">V</span>
             </div>
           </div>
-          <CardTitle className="text-2xl text-center">ValidaCRM</CardTitle>
+          <CardTitle className="text-2xl text-center">AprovaCRM</CardTitle>
           <CardDescription className="text-center">
             Sistema de Gestão de Propostas
           </CardDescription>

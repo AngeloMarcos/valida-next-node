@@ -1,6 +1,8 @@
 import { LayoutDashboard, Users, FileText, LogOut, Building2, Package, UserCog, Activity, Menu, MessageCircle } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
+import logoCompleto from "@/assets/logo-completo.webp";
+import logoIcon from "@/assets/logo-icon.webp";
 import {
   Sidebar,
   SidebarContent,
@@ -51,7 +53,7 @@ export function AppSidebar() {
         <div className="flex items-center justify-between p-4">
           {!collapsed ? (
             <>
-              <h2 className="text-lg font-bold text-sidebar-foreground">ValidaCRM</h2>
+              <img src={logoCompleto} alt="AprovaCRM" className="h-8" />
               <Button
                 variant="ghost"
                 size="icon"
@@ -62,14 +64,17 @@ export function AppSidebar() {
               </Button>
             </>
           ) : (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleSidebar}
-              className="h-10 w-10 mx-auto text-sidebar-foreground hover:bg-sidebar-accent"
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
+            <div className="flex flex-col items-center gap-2">
+              <img src={logoIcon} alt="AprovaCRM" className="h-8 w-8" />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleSidebar}
+                className="h-8 w-8 mx-auto text-sidebar-foreground hover:bg-sidebar-accent"
+              >
+                <Menu className="h-4 w-4" />
+              </Button>
+            </div>
           )}
         </div>
       </SidebarHeader>
