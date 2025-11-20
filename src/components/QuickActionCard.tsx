@@ -22,12 +22,12 @@ export function QuickActionCard({ title, icon: Icon, onClick }: QuickActionCardP
             variant="outline"
             size="icon"
             onClick={onClick}
-            className="h-10 w-10 rounded-full border-border bg-card hover:bg-accent hover:border-primary transition-all"
+            className="h-8 w-8 rounded-full border-border/50 bg-card hover:bg-accent hover:border-primary/50 transition-all shadow-sm"
           >
-            <Icon className="h-4 w-4 text-foreground" />
+            <Icon className="h-3.5 w-3.5 text-foreground" />
           </Button>
         </TooltipTrigger>
-        <TooltipContent>
+        <TooltipContent side="bottom" className="text-[10px]">
           <p>{title}</p>
         </TooltipContent>
       </Tooltip>
