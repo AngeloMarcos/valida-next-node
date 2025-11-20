@@ -26,7 +26,6 @@ const baseSchema = z.object({
   }),
   produto_id: z.string().min(1, "Produto é obrigatório"),
   banco_id: z.string().min(1, "Banco é obrigatório"),
-  promotora_id: z.string().optional(),
   status: z.string().default("em_analise"),
   observacoes: z.string().optional(),
 });
@@ -72,8 +71,6 @@ export function PropostaFormDynamic({ onSuccess, onCancel }: PropostaFormDynamic
 
   const [produtos, setProdutos] = useState<SelectOption[]>([]);
   const [loadingProdutos, setLoadingProdutos] = useState(false);
-  const [promotoras, setPromotoras] = useState<SelectOption[]>([]);
-  const [loadingPromotoras, setLoadingPromotoras] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [currentSchema, setCurrentSchema] = useState(baseSchema);
@@ -85,7 +82,6 @@ export function PropostaFormDynamic({ onSuccess, onCancel }: PropostaFormDynamic
       tipo_proposta: "credito_pessoal" as const,
       produto_id: "",
       banco_id: "",
-      promotora_id: "",
       status: "em_analise",
       observacoes: "",
     },
@@ -120,9 +116,6 @@ export function PropostaFormDynamic({ onSuccess, onCancel }: PropostaFormDynamic
     }
   }, [tipoProposta, setValue]);
 
-  useEffect(() => {
-    loadPromotoras();
-  }, []);
 
   // ============================================================================
   // FUNÇÕES DE CARREGAMENTO
@@ -166,36 +159,6 @@ export function PropostaFormDynamic({ onSuccess, onCancel }: PropostaFormDynamic
     }
   };
 
-  /**
-   * Carregar promotoras ativas
-   */
-  const loadPromotoras = async () => {
-    setLoadingPromotoras(true);
-
-    try {
-      const { data, error } = await supabase
-        .from("promotoras")
-        .select("id, nome")
-        .eq("ativo", true)
-        .order("nome", { ascending: true });
-
-      if (error) {
-        console.warn("Tabela promotoras não encontrada ou erro:", error.message);
-        return;
-      }
-
-      const mappedPromotoras = (data || []).map((p) => ({
-        value: p.id,
-        label: p.nome,
-      }));
-
-      setPromotoras(mappedPromotoras);
-    } catch (error: any) {
-      console.warn("Erro ao carregar promotoras:", error.message);
-    } finally {
-      setLoadingPromotoras(false);
-    }
-  };
 
   // ============================================================================
   // SUBMIT
@@ -261,7 +224,6 @@ export function PropostaFormDynamic({ onSuccess, onCancel }: PropostaFormDynamic
           tipo_proposta: data.tipo_proposta,
           produto_id: data.produto_id,
           banco_id: data.banco_id,
-          promotora_id: data.promotora_id || null,
           status: data.status,
           observacoes: data.observacoes || null,
           detalhes_produto: detalhes,
@@ -425,10 +387,7 @@ export function PropostaFormDynamic({ onSuccess, onCancel }: PropostaFormDynamic
                   min="0.01"
                   placeholder="0.00"
                   disabled={submitting}
-                  onChange={(e) => {
-                    const value = parseFloat(e.target.value) || 0;
-                    setValue("valor_solicitado", value, { shouldValidate: true });
-                  }}
+                  valueAsNumber
                 />
 
                 <FormInput
@@ -439,10 +398,7 @@ export function PropostaFormDynamic({ onSuccess, onCancel }: PropostaFormDynamic
                   min="0.01"
                   placeholder="0.00"
                   disabled={submitting}
-                  onChange={(e) => {
-                    const value = parseFloat(e.target.value) || 0;
-                    setValue("valor_parcela", value, { shouldValidate: true });
-                  }}
+                  valueAsNumber
                 />
 
                 <FormInput
@@ -453,10 +409,7 @@ export function PropostaFormDynamic({ onSuccess, onCancel }: PropostaFormDynamic
                   max="360"
                   placeholder="12"
                   disabled={submitting}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value) || 0;
-                    setValue("prazo_meses", value, { shouldValidate: true });
-                  }}
+                  valueAsNumber
                 />
 
                 <FormInput
@@ -468,10 +421,7 @@ export function PropostaFormDynamic({ onSuccess, onCancel }: PropostaFormDynamic
                   max="100"
                   placeholder="1.99"
                   disabled={submitting}
-                  onChange={(e) => {
-                    const value = parseFloat(e.target.value) || 0;
-                    setValue("taxa_juros", value, { shouldValidate: true });
-                  }}
+                  valueAsNumber
                 />
               </div>
             )}
@@ -486,10 +436,7 @@ export function PropostaFormDynamic({ onSuccess, onCancel }: PropostaFormDynamic
                   min="0.01"
                   placeholder="0.00"
                   disabled={submitting}
-                  onChange={(e) => {
-                    const value = parseFloat(e.target.value) || 0;
-                    setValue("valor_credito", value, { shouldValidate: true });
-                  }}
+                  valueAsNumber
                 />
 
                 <FormInput
@@ -500,10 +447,7 @@ export function PropostaFormDynamic({ onSuccess, onCancel }: PropostaFormDynamic
                   min="0.01"
                   placeholder="0.00"
                   disabled={submitting}
-                  onChange={(e) => {
-                    const value = parseFloat(e.target.value) || 0;
-                    setValue("valor_bem", value, { shouldValidate: true });
-                  }}
+                  valueAsNumber
                 />
 
                 <FormInput
@@ -514,10 +458,7 @@ export function PropostaFormDynamic({ onSuccess, onCancel }: PropostaFormDynamic
                   max="360"
                   placeholder="120"
                   disabled={submitting}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value) || 0;
-                    setValue("prazo_meses", value, { shouldValidate: true });
-                  }}
+                  valueAsNumber
                 />
 
                 <FormInput
@@ -529,10 +470,7 @@ export function PropostaFormDynamic({ onSuccess, onCancel }: PropostaFormDynamic
                   max="100"
                   placeholder="0.20"
                   disabled={submitting}
-                  onChange={(e) => {
-                    const value = parseFloat(e.target.value) || 0;
-                    setValue("taxa_administracao", value, { shouldValidate: true });
-                  }}
+                  valueAsNumber
                 />
               </div>
             )}
@@ -547,10 +485,7 @@ export function PropostaFormDynamic({ onSuccess, onCancel }: PropostaFormDynamic
                   min="0.01"
                   placeholder="0.00"
                   disabled={submitting}
-                  onChange={(e) => {
-                    const value = parseFloat(e.target.value) || 0;
-                    setValue("limite_desejado", value, { shouldValidate: true });
-                  }}
+                  valueAsNumber
                 />
               </div>
             )}
@@ -575,14 +510,6 @@ export function PropostaFormDynamic({ onSuccess, onCancel }: PropostaFormDynamic
                 placeholder={loadingBancos ? "Carregando..." : "Selecione o banco"}
                 options={bancos}
                 disabled={loadingBancos || submitting}
-              />
-
-              <FormSelect
-                name="promotora_id"
-                label="Promotora (Opcional)"
-                placeholder={loadingPromotoras ? "Carregando..." : "Selecione a promotora"}
-                options={promotoras}
-                disabled={loadingPromotoras || submitting}
               />
 
               <FormSelect
