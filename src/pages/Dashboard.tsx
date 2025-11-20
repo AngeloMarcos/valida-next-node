@@ -102,84 +102,79 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-4">
+        {/* Header */}
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-          <p className="text-muted-foreground">
-            Visão geral do seu sistema de CRM
-          </p>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">Dashboard</h2>
+          <p className="text-sm text-muted-foreground">Visão geral do seu sistema de CRM</p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* KPI Cards - Grid compacto */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
           <StatCard
-            title="Total de Clientes"
+            title="Total Clientes"
             value={stats?.total_clientes || 0}
             icon={Users}
             iconColor="primary"
-            description="Clientes cadastrados"
           />
           <StatCard
-            title="Total de Propostas"
+            title="Total Propostas"
             value={stats?.total_propostas || 0}
             icon={FileText}
             iconColor="primary"
-            description="Propostas cadastradas"
           />
           <StatCard
-            title="Propostas em Análise"
+            title="Em Análise"
             value={stats?.propostas_analise || 0}
             icon={FileSearch}
             iconColor="warning"
-            description="Aguardando análise"
           />
           <StatCard
-            title="Taxa de Aprovação"
-            value={`${(stats?.taxa_aprovacao || 0).toFixed(1)}%`}
-            icon={TrendingUp}
-            iconColor="primary"
-            description="Taxa de aprovação"
-          />
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            title="Propostas Aprovadas"
+            title="Aprovadas"
             value={stats?.propostas_aprovadas || 0}
             icon={CheckCircle}
             iconColor="primary"
-            description="Aprovadas"
-          />
-          <StatCard
-            title="Ticket Médio"
-            value={new Intl.NumberFormat('pt-BR', {
-              style: 'currency',
-              currency: 'BRL',
-            }).format(stats?.ticket_medio || 0)}
-            icon={DollarSign}
-            iconColor="primary"
-            description="Valor médio aprovado"
-          />
-          <StatCard
-            title="Valor Total Aprovado"
-            value={new Intl.NumberFormat('pt-BR', {
-              style: 'currency',
-              currency: 'BRL',
-            }).format(stats?.valor_total_aprovado || 0)}
-            icon={DollarSign}
-            iconColor="primary"
-            description="Total aprovado"
           />
           <StatCard
             title="Pendentes"
             value={stats?.propostas_pendentes || 0}
             icon={FileText}
-            description="Propostas pendentes"
+            iconColor="muted"
+          />
+          <StatCard
+            title="Taxa Aprovação"
+            value={`${(stats?.taxa_aprovacao || 0).toFixed(1)}%`}
+            icon={TrendingUp}
+            iconColor="primary"
           />
         </div>
 
-        <div className="space-y-3">
-          <h3 className="text-lg font-semibold">Ações Rápidas</h3>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* Valores - Segunda linha de KPIs */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-3">
+          <StatCard
+            title="Ticket Médio"
+            value={new Intl.NumberFormat('pt-BR', {
+              style: 'currency',
+              currency: 'BRL',
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            }).format(stats?.ticket_medio || 0)}
+            icon={DollarSign}
+            iconColor="primary"
+          />
+          <StatCard
+            title="Total Aprovado"
+            value={new Intl.NumberFormat('pt-BR', {
+              style: 'currency',
+              currency: 'BRL',
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            }).format(stats?.valor_total_aprovado || 0)}
+            icon={DollarSign}
+            iconColor="primary"
+          />
+          <div className="flex items-center justify-center gap-2 bg-card border border-border rounded-lg p-3">
+            <span className="text-xs text-muted-foreground mr-2">Ações:</span>
             <QuickActionCard
               title="Nova Proposta"
               icon={Plus}
@@ -198,44 +193,49 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-7">
-          <Card className="col-span-4">
-            <CardHeader>
-              <CardTitle>Tendência de Propostas</CardTitle>
-              <CardDescription>Últimos 6 meses</CardDescription>
+        {/* Gráficos e Calendário - Layout compacto */}
+        <div className="grid gap-3 lg:grid-cols-3">
+          <Card className="lg:col-span-2 border-border bg-card">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold text-card-foreground">Tendência de Propostas</CardTitle>
+              <CardDescription className="text-xs">Últimos 6 meses</CardDescription>
             </CardHeader>
-            <CardContent className="pl-2">
+            <CardContent className="pl-2 pr-4 pb-3">
               {dashboardLoading ? (
-                <div className="h-[300px] flex items-center justify-center">
-                  <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+                <div className="h-[180px] flex items-center justify-center">
+                  <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
+                </div>
+              ) : trends.length === 0 ? (
+                <div className="h-[180px] flex flex-col items-center justify-center text-muted-foreground">
+                  <TrendingUp className="h-8 w-8 mb-2 opacity-30" />
+                  <p className="text-xs">Sem dados de tendência ainda</p>
                 </div>
               ) : (
                 <ChartContainer
                   config={{
                     count: { label: "Propostas", color: "hsl(var(--chart-1))" },
-                    total_valor: { label: "Valor Total", color: "hsl(var(--chart-2))" },
                   }}
-                  className="h-[300px]"
+                  className="h-[180px]"
                 >
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={trends}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
                       <XAxis
                         dataKey="month"
-                        className="text-xs"
+                        tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                         tickFormatter={(value) => {
                           const [year, month] = value.split('-');
                           return format(new Date(parseInt(year), parseInt(month) - 1), 'MMM', { locale: ptBR });
                         }}
                       />
-                      <YAxis className="text-xs" />
+                      <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
                       <ChartTooltip content={<ChartTooltipContent />} />
                       <Line
                         type="monotone"
                         dataKey="count"
                         stroke="hsl(var(--chart-1))"
                         strokeWidth={2}
-                        dot={{ fill: "hsl(var(--chart-1))" }}
+                        dot={{ fill: "hsl(var(--chart-1))", r: 3 }}
                       />
                     </LineChart>
                   </ResponsiveContainer>
@@ -244,47 +244,55 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="col-span-3">
-            <CardHeader>
-              <CardTitle>Calendário</CardTitle>
-              <CardDescription>Acompanhe suas atividades</CardDescription>
+          <Card className="border-border bg-card">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold text-card-foreground flex items-center gap-2">
+                <CalendarIcon className="h-3.5 w-3.5" />
+                Calendário
+              </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-2 pb-2">
               <Calendar
                 mode="single"
                 selected={selectedDate}
                 onSelect={setSelectedDate}
-                className="rounded-md border"
+                className="rounded-md border-0 [&_.rdp-caption]:text-xs [&_.rdp-head_cell]:text-[10px] [&_.rdp-day]:text-xs [&_.rdp-day]:h-7 [&_.rdp-day]:w-7"
               />
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-          <Card className="col-span-4">
-            <CardHeader>
-              <CardTitle>Propostas por Status</CardTitle>
-              <CardDescription>Distribuição atual</CardDescription>
+        {/* Status e Propostas Recentes */}
+        <div className="grid gap-3 lg:grid-cols-3">
+          <Card className="lg:col-span-2 border-border bg-card">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold text-card-foreground">Distribuição por Status</CardTitle>
+              <CardDescription className="text-xs">Visão atual</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pl-2 pr-4 pb-3">
               {dashboardLoading ? (
-                <div className="h-[300px] flex items-center justify-center">
-                  <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+                <div className="h-[180px] flex items-center justify-center">
+                  <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
+                </div>
+              ) : statusBreakdown.length === 0 ? (
+                <div className="h-[180px] flex flex-col items-center justify-center text-muted-foreground">
+                  <FileText className="h-8 w-8 mb-2 opacity-30" />
+                  <p className="text-xs">Sem propostas para exibir</p>
                 </div>
               ) : (
                 <ChartContainer
                   config={{
                     count: { label: "Quantidade", color: "hsl(var(--chart-1))" },
                   }}
-                  className="h-[300px]"
+                  className="h-[180px]"
                 >
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={statusBreakdown}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                      <XAxis dataKey="status" className="text-xs" />
-                      <YAxis className="text-xs" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                      <XAxis dataKey="status" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                      <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
                       <ChartTooltip content={<ChartTooltipContent />} />
-                      <Bar dataKey="count" fill="hsl(var(--chart-1))" radius={[8, 8, 0, 0]} />
+                      <Bar dataKey="count" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </ChartContainer>
@@ -292,35 +300,41 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="col-span-3">
-            <CardHeader>
-              <CardTitle>Propostas Recentes</CardTitle>
-              <CardDescription>Últimas 5 propostas</CardDescription>
+          <Card className="border-border bg-card">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold text-card-foreground">Propostas Recentes</CardTitle>
+              <CardDescription className="text-xs">Últimas 5</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pb-3">
               {dashboardLoading ? (
                 <div className="space-y-2">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div key={i} className="h-16 bg-muted rounded animate-pulse" />
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-12 bg-muted/20 rounded animate-pulse" />
                   ))}
                 </div>
+              ) : recentPropostas.length === 0 ? (
+                <div className="h-[160px] flex flex-col items-center justify-center text-muted-foreground">
+                  <FileSearch className="h-8 w-8 mb-2 opacity-30" />
+                  <p className="text-xs">Sem propostas recentes</p>
+                </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-2">
                   {recentPropostas.map((proposta) => (
                     <div
                       key={proposta.id}
-                      className="flex items-start justify-between gap-3 cursor-pointer hover:bg-muted/50 p-2 rounded transition-colors"
+                      className="flex items-start justify-between gap-2 cursor-pointer hover:bg-accent/50 p-2 rounded-md transition-colors border border-transparent hover:border-border"
                       onClick={() => navigate(`/propostas/${proposta.id}`)}
                     >
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{proposta.cliente_nome}</p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {proposta.produto_nome} - {proposta.banco_nome}
+                        <p className="text-xs font-medium truncate text-foreground">{proposta.cliente_nome}</p>
+                        <p className="text-[10px] text-muted-foreground truncate">
+                          {proposta.produto_nome}
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-[10px] text-muted-foreground font-semibold">
                           {new Intl.NumberFormat('pt-BR', {
                             style: 'currency',
                             currency: 'BRL',
+                            minimumFractionDigits: 0,
                           }).format(proposta.valor)}
                         </p>
                       </div>
@@ -332,7 +346,7 @@ export default function Dashboard() {
                             ? 'destructive'
                             : 'secondary'
                         }
-                        className="text-xs"
+                        className="text-[10px] px-1.5 py-0"
                       >
                         {proposta.status}
                       </Badge>

@@ -22,19 +22,19 @@ export function StatCard({ title, value, icon: Icon, description, iconColor = "m
   }[iconColor];
 
   return (
-    <Card className="transition-all duration-200 hover:border-primary">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className={cn("h-4 w-4", iconColorClass)} />
+    <Card className="transition-all duration-200 hover:shadow-md border-border bg-card">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-3 pt-3">
+        <CardTitle className="text-xs font-medium text-card-foreground">{title}</CardTitle>
+        <Icon className={cn("h-3.5 w-3.5", iconColorClass)} />
       </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+      <CardContent className="px-3 pb-3 pt-1">
+        <div className="text-lg font-bold text-card-foreground">{value}</div>
         {description && (
-          <p className="text-xs text-muted-foreground mt-1">{description}</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{description}</p>
         )}
         {trend && (
-          <p className={`text-xs mt-1 ${trend.isPositive ? 'text-success' : 'text-destructive'}`}>
-            {trend.isPositive ? '+' : ''}{trend.value}% em relação ao mês anterior
+          <p className={`text-[10px] mt-0.5 leading-tight ${trend.isPositive ? 'text-success' : 'text-destructive'}`}>
+            {trend.isPositive ? '+' : ''}{trend.value}%
           </p>
         )}
       </CardContent>
