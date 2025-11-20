@@ -66,7 +66,7 @@ export default function Propostas() {
   const [dataFim, setDataFim] = useState<string>('');
   const [consultorFilter, setConsultorFilter] = useState<string>('all');
 
-  const loadPropostas = async (page: number = currentPage, size: number = pageSize) => {
+  const loadPropostas = async (page: number = currentPage, size: number = pageSize, skipPagination: boolean = false) => {
     const filters: PropostaFilters = {
       search: searchTerm || undefined,
       status: statusFilter !== 'all' ? statusFilter : undefined,
@@ -74,15 +74,21 @@ export default function Propostas() {
       tipo_proposta: tipoFilter !== 'all' ? (tipoFilter as 'credito' | 'consorcio' | 'seguro') : undefined,
     };
 
-    const result = await fetchPropostas(page, size, filters);
+    // Para o Kanban, carregar todas as propostas sem paginação
+    const result = skipPagination 
+      ? await fetchPropostas(1, 1000, filters)
+      : await fetchPropostas(page, size, filters);
+    
     setPropostas(result.data);
     setTotalItems(result.count);
     setTotalPages(result.totalPages);
   };
 
   useEffect(() => {
-    loadPropostas();
-  }, [currentPage, pageSize, searchTerm, statusFilter, bancoFilter, tipoFilter]);
+    // Se estiver em modo kanban, carregar todas as propostas
+    const skipPagination = viewMode === 'kanban';
+    loadPropostas(currentPage, pageSize, skipPagination);
+  }, [currentPage, pageSize, searchTerm, statusFilter, bancoFilter, tipoFilter, viewMode]);
 
   useEffect(() => {
     if (editId) {
