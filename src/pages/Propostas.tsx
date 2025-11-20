@@ -21,6 +21,7 @@ import { Plus, Search, Filter, LayoutList, Kanban } from 'lucide-react';
 import { usePropostas, Proposta, PropostaFormData, PropostaFilters } from '@/hooks/usePropostas';
 import { useBancosSelect } from '@/hooks/useBancosSelect';
 import { PropostaForm } from '@/components/propostas/PropostaForm';
+import { PropostaFormDynamic } from '@/components/propostas/PropostaFormDynamic';
 import { PropostasList } from '@/components/propostas/PropostasList';
 import { PropostasPagination } from '@/components/propostas/PropostasPagination';
 import { PropostasKanban } from '@/components/propostas/PropostasKanban';
@@ -285,20 +286,23 @@ export default function Propostas() {
         </Tabs>
 
         <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
-          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingProposta ? 'Editar Proposta' : 'Nova Proposta'}
               </DialogTitle>
               <DialogDescription>
-                Preencha os dados da proposta abaixo. Campos com * são obrigatórios.
+                {editingProposta
+                  ? 'Atualize os dados da proposta'
+                  : 'Preencha os dados para criar uma nova proposta'}
               </DialogDescription>
             </DialogHeader>
-            <PropostaForm
-              proposta={editingProposta}
-              onSubmit={handleSubmit}
+            <PropostaFormDynamic
+              onSuccess={() => {
+                handleDialogClose(false);
+                loadPropostas();
+              }}
               onCancel={() => handleDialogClose(false)}
-              loading={loading}
             />
           </DialogContent>
         </Dialog>
