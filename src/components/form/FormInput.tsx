@@ -9,16 +9,22 @@ export interface FormInputProps extends React.InputHTMLAttributes<HTMLInputEleme
   label?: string;
   helperText?: string;
   containerClassName?: string;
+  valueAsNumber?: boolean;
+  valueAsDate?: boolean;
 }
 
 export const FormInput = React.forwardRef<HTMLInputElement, FormInputProps>(
-  ({ name, label, helperText, containerClassName, className, ...props }, ref) => {
+  ({ name, label, helperText, containerClassName, className, valueAsNumber, valueAsDate, ...props }, ref) => {
     const {
       register,
       formState: { errors },
     } = useFormContext();
 
-    const { ref: rhfRef, ...rest } = register(name);
+    const registerOptions: any = {};
+    if (valueAsNumber) registerOptions.valueAsNumber = true;
+    if (valueAsDate) registerOptions.valueAsDate = true;
+    
+    const { ref: rhfRef, ...rest } = register(name, registerOptions);
     const error = errors[name];
     const errorMessage = error?.message as string | undefined;
 
