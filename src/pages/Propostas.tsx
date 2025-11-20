@@ -17,7 +17,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Plus, Search, Filter, LayoutList, Kanban } from 'lucide-react';
+import { Plus, Search, Filter, LayoutList, Kanban, X } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Label } from '@/components/ui/label';
 import { usePropostas, Proposta, PropostaFormData, PropostaFilters } from '@/hooks/usePropostas';
 import { useBancosSelect } from '@/hooks/useBancosSelect';
 import { PropostaForm } from '@/components/propostas/PropostaForm';
@@ -60,6 +62,9 @@ export default function Propostas() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [bancoFilter, setBancoFilter] = useState<string>('all');
   const [tipoFilter, setTipoFilter] = useState<string>('all');
+  const [dataInicio, setDataInicio] = useState<string>('');
+  const [dataFim, setDataFim] = useState<string>('');
+  const [consultorFilter, setConsultorFilter] = useState<string>('all');
 
   const loadPropostas = async (page: number = currentPage, size: number = pageSize) => {
     const filters: PropostaFilters = {
@@ -155,8 +160,13 @@ export default function Propostas() {
     setStatusFilter('all');
     setBancoFilter('all');
     setTipoFilter('all');
+    setDataInicio('');
+    setDataFim('');
+    setConsultorFilter('all');
     setCurrentPage(1);
   };
+
+  const hasActiveFilters = searchTerm || statusFilter !== 'all' || bancoFilter !== 'all' || tipoFilter !== 'all' || dataInicio || dataFim || consultorFilter !== 'all';
 
   const handleDialogClose = (open: boolean) => {
     setIsDialogOpen(open);
@@ -195,62 +205,110 @@ export default function Propostas() {
               </TabsTrigger>
             </TabsList>
 
-            <div className="flex gap-2 items-center">
-              <div className="relative">
+            <div className="flex gap-2 items-center flex-wrap">
+              <div className="relative flex-1 min-w-[200px]">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar por cliente..."
+                  placeholder="Buscar por cliente, banco ou produto..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9 w-[250px]"
+                  className="pl-9"
                 />
               </div>
 
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos status</SelectItem>
-                  <SelectItem value="rascunho">Rascunho</SelectItem>
-                  <SelectItem value="em_analise">Em Análise</SelectItem>
-                  <SelectItem value="aprovada">Aprovada</SelectItem>
-                  <SelectItem value="reprovada">Reprovada</SelectItem>
-                  <SelectItem value="cancelada">Cancelada</SelectItem>
-                </SelectContent>
-              </Select>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filtros
+                    {hasActiveFilters && (
+                      <span className="ml-2 h-2 w-2 rounded-full bg-primary" />
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80" align="end">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Status</Label>
+                      <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Todos os status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos os status</SelectItem>
+                          <SelectItem value="em_analise">Em Análise</SelectItem>
+                          <SelectItem value="doc_pendente">Doc. Pendente</SelectItem>
+                          <SelectItem value="em_processamento">Em Processamento</SelectItem>
+                          <SelectItem value="aprovada">Aprovada</SelectItem>
+                          <SelectItem value="recusada">Recusada</SelectItem>
+                          <SelectItem value="cancelada">Cancelada</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-              <Select value={bancoFilter} onValueChange={setBancoFilter}>
-                <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Banco" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos bancos</SelectItem>
-                  {bancos.map((banco) => (
-                    <SelectItem key={banco.value} value={banco.value}>
-                      {banco.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                    <div className="space-y-2">
+                      <Label>Banco</Label>
+                      <Select value={bancoFilter} onValueChange={setBancoFilter}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Todos os bancos" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos os bancos</SelectItem>
+                          {bancos.map((banco) => (
+                            <SelectItem key={banco.value} value={banco.value}>
+                              {banco.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-              <Select value={tipoFilter} onValueChange={setTipoFilter}>
-                <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos tipos</SelectItem>
-                  <SelectItem value="credito">Crédito</SelectItem>
-                  <SelectItem value="consorcio">Consórcio</SelectItem>
-                  <SelectItem value="seguro">Seguro</SelectItem>
-                </SelectContent>
-              </Select>
+                    <div className="space-y-2">
+                      <Label>Tipo de Produto</Label>
+                      <Select value={tipoFilter} onValueChange={setTipoFilter}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Todos os tipos" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos os tipos</SelectItem>
+                          <SelectItem value="credito">Crédito</SelectItem>
+                          <SelectItem value="consorcio">Consórcio</SelectItem>
+                          <SelectItem value="seguro">Seguro</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-              {(searchTerm || statusFilter !== 'all' || bancoFilter !== 'all' || tipoFilter !== 'all') && (
-                <Button variant="outline" size="sm" onClick={handleClearFilters}>
-                  Limpar
-                </Button>
-              )}
+                    <div className="space-y-2">
+                      <Label>Data Início</Label>
+                      <Input
+                        type="date"
+                        value={dataInicio}
+                        onChange={(e) => setDataInicio(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Data Fim</Label>
+                      <Input
+                        type="date"
+                        value={dataFim}
+                        onChange={(e) => setDataFim(e.target.value)}
+                      />
+                    </div>
+
+                    {hasActiveFilters && (
+                      <Button
+                        variant="outline"
+                        onClick={handleClearFilters}
+                        className="w-full"
+                      >
+                        <X className="h-4 w-4 mr-2" />
+                        Limpar Filtros
+                      </Button>
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
 
