@@ -16,10 +16,11 @@ interface PropostasKanbanProps {
 }
 
 const KANBAN_COLUMNS = [
-  { id: 'rascunho', title: 'Rascunho', color: 'hsl(var(--muted))' },
   { id: 'em_analise', title: 'Em Análise', color: 'hsl(var(--primary))' },
+  { id: 'doc_pendente', title: 'Doc. Pendente', color: 'hsl(var(--chart-1))' },
+  { id: 'em_processamento', title: 'Em Processamento', color: 'hsl(var(--chart-3))' },
   { id: 'aprovada', title: 'Aprovada', color: 'hsl(var(--chart-2))' },
-  { id: 'reprovada', title: 'Reprovada', color: 'hsl(var(--destructive))' },
+  { id: 'recusada', title: 'Recusada', color: 'hsl(var(--destructive))' },
   { id: 'cancelada', title: 'Cancelada', color: 'hsl(var(--muted-foreground))' },
 ];
 
