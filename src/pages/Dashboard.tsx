@@ -110,13 +110,15 @@ export default function Dashboard() {
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 overflow-x-auto">
           <StatCard
             title="Total de Clientes"
             value={stats?.total_clientes || 0}
             icon={Users}
             iconColor="primary"
             description="Clientes cadastrados"
+            trend={{ value: 12.5, isPositive: true }}
+            sparklineData={trends.slice(0, 7).map(t => ({ value: t.count }))}
           />
           <StatCard
             title="Total de Propostas"
@@ -124,6 +126,8 @@ export default function Dashboard() {
             icon={FileText}
             iconColor="primary"
             description="Propostas cadastradas"
+            trend={{ value: 8.2, isPositive: true }}
+            sparklineData={trends.slice(0, 7).map(t => ({ value: t.count }))}
           />
           <StatCard
             title="Propostas em Análise"
@@ -131,6 +135,7 @@ export default function Dashboard() {
             icon={FileSearch}
             iconColor="warning"
             description="Aguardando análise"
+            trend={{ value: -3.1, isPositive: false }}
           />
           <StatCard
             title="Taxa de Aprovação"
@@ -138,42 +143,48 @@ export default function Dashboard() {
             icon={TrendingUp}
             iconColor="primary"
             description="Taxa de aprovação"
+            trend={{ value: 5.4, isPositive: true }}
           />
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatCard
             title="Propostas Aprovadas"
             value={stats?.propostas_aprovadas || 0}
             icon={CheckCircle}
             iconColor="primary"
             description="Aprovadas"
+            trend={{ value: 15.8, isPositive: true }}
           />
           <StatCard
             title="Ticket Médio"
             value={new Intl.NumberFormat('pt-BR', {
               style: 'currency',
               currency: 'BRL',
+              notation: 'compact',
+              maximumFractionDigits: 1
             }).format(stats?.ticket_medio || 0)}
             icon={DollarSign}
             iconColor="primary"
             description="Valor médio aprovado"
+            trend={{ value: 7.3, isPositive: true }}
           />
           <StatCard
             title="Valor Total Aprovado"
             value={new Intl.NumberFormat('pt-BR', {
               style: 'currency',
               currency: 'BRL',
+              notation: 'compact',
+              maximumFractionDigits: 1
             }).format(stats?.valor_total_aprovado || 0)}
             icon={DollarSign}
             iconColor="primary"
             description="Total aprovado"
+            trend={{ value: 22.1, isPositive: true }}
           />
           <StatCard
             title="Pendentes"
             value={stats?.propostas_pendentes || 0}
             icon={FileText}
             description="Propostas pendentes"
+            trend={{ value: -1.5, isPositive: false }}
           />
         </div>
 
