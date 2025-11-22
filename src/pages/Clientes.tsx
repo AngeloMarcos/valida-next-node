@@ -20,15 +20,14 @@ export default function Clientes() {
   const [searchParams, setSearchParams] = useSearchParams();
   const openNew = searchParams.get('new');
   
-  const [clientes, setClientes] = useState<Cliente[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCliente, setEditingCliente] = useState<Cliente | undefined>();
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const [totalCount, setTotalCount] = useState(0);
 
   const {
+    clientes,
     loading,
     fetchClientes,
     createCliente,
@@ -36,18 +35,10 @@ export default function Clientes() {
     deleteCliente,
   } = useClientes();
 
-  const pageSize = 10;
-
-  const loadClientes = async () => {
-    const result = await fetchClientes(currentPage, pageSize, searchTerm);
-    setClientes(result.data);
-    setTotalPages(result.totalPages);
-    setTotalCount(result.count);
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    fetchClientes(value);
   };
-
-  useEffect(() => {
-    loadClientes();
-  }, [currentPage, searchTerm]);
 
   useEffect(() => {
     if (openNew === 'true') {
@@ -67,7 +58,6 @@ export default function Clientes() {
     }
 
     if (success) {
-      await loadClientes();
       setIsDialogOpen(false);
       setEditingCliente(undefined);
     }
@@ -81,13 +71,7 @@ export default function Clientes() {
   };
 
   const handleDelete = async (id: string) => {
-    const success = await deleteCliente(id);
-    if (success) {
-      await loadClientes();
-      if (clientes.length === 1 && currentPage > 1) {
-        setCurrentPage(currentPage - 1);
-      }
-    }
+    await deleteCliente(id);
   };
 
   const handleOpenDialog = () => {
@@ -98,11 +82,6 @@ export default function Clientes() {
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setEditingCliente(undefined);
-  };
-
-  const handleSearch = (value: string) => {
-    setSearchTerm(value);
-    setCurrentPage(1);
   };
 
   return (
@@ -131,9 +110,11 @@ export default function Clientes() {
               className="pl-10"
             />
           </div>
-          <div className="text-sm text-muted-foreground">
-            {totalCount} {totalCount === 1 ? 'cliente' : 'clientes'}
-          </div>
+          {clientes.length > 0 && (
+            <div className="text-sm text-muted-foreground">
+              {clientes.length} {clientes.length === 1 ? 'cliente' : 'clientes'}
+            </div>
+          )}
         </div>
 
         <ClientesList
@@ -141,12 +122,6 @@ export default function Clientes() {
           onEdit={handleEdit}
           onDelete={handleDelete}
           isLoading={loading}
-        />
-
-        <ClientesPagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
         />
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

@@ -6,22 +6,17 @@ import { Building2 } from 'lucide-react';
 
 export default function Promotoras() {
   const [showModal, setShowModal] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const [promotoras, setPromotoras] = useState<any[]>([]);
-  const [totalPages, setTotalPages] = useState(0);
   
-  const { loading, fetchPromotoras } = usePromotoras();
+  const { promotoras, loading, fetchPromotoras } = usePromotoras();
 
-  const loadPromotoras = async () => {
-    const result = await fetchPromotoras(currentPage, 10, searchTerm);
-    setPromotoras(result.data);
-    setTotalPages(result.totalPages);
+  const loadPromotoras = () => {
+    fetchPromotoras(searchTerm);
   };
 
   useEffect(() => {
     loadPromotoras();
-  }, [currentPage, searchTerm]);
+  }, [searchTerm]);
 
   return (
     <CadastrosLayout
@@ -41,7 +36,7 @@ export default function Promotoras() {
         />
       ) : (
         <div className="text-center py-8">
-          <p className="text-muted-foreground">Lista de promotoras (CRUD será implementado em breve)</p>
+          <p className="text-muted-foreground">Lista de promotoras - total: {promotoras.length}</p>
         </div>
       )}
     </CadastrosLayout>

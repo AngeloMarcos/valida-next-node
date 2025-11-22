@@ -17,45 +17,20 @@ import { BancosPagination } from '@/components/bancos/BancosPagination';
 
 export default function Bancos() {
   const {
+    bancos,
     loading,
     fetchBancos,
     createBanco,
     updateBanco,
     deleteBanco,
-    searchBancos,
   } = useBancos();
 
-  const [bancos, setBancos] = useState<Banco[]>([]);
-  const [totalItems, setTotalItems] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBanco, setEditingBanco] = useState<Banco | undefined>();
 
-  const loadBancos = async (page: number = currentPage, size: number = pageSize) => {
-    const result = await fetchBancos(page, size);
-    setBancos(result.data);
-    setTotalItems(result.count);
-    setTotalPages(result.totalPages);
-  };
-
-  useEffect(() => {
-    loadBancos();
-  }, [currentPage, pageSize]);
-
-  const handleSearch = async () => {
-    if (searchTerm.trim()) {
-      const results = await searchBancos(searchTerm);
-      setBancos(results);
-      setTotalItems(results.length);
-      setTotalPages(1);
-      setCurrentPage(1);
-    } else {
-      loadBancos(1, pageSize);
-      setCurrentPage(1);
-    }
+  const handleSearch = () => {
+    fetchBancos(searchTerm);
   };
 
   const handleCreate = () => {
@@ -80,24 +55,11 @@ export default function Bancos() {
     if (success) {
       setIsDialogOpen(false);
       setEditingBanco(undefined);
-      loadBancos();
     }
   };
 
   const handleDelete = async (id: string) => {
-    const success = await deleteBanco(id);
-    if (success) {
-      loadBancos();
-    }
-  };
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  const handlePageSizeChange = (size: number) => {
-    setPageSize(size);
-    setCurrentPage(1);
+    await deleteBanco(id);
   };
 
   return (
@@ -138,17 +100,6 @@ export default function Bancos() {
           onEdit={handleEdit}
           onDelete={handleDelete}
         />
-
-        {totalItems > 0 && (
-          <BancosPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            pageSize={pageSize}
-            totalItems={totalItems}
-            onPageChange={handlePageChange}
-            onPageSizeChange={handlePageSizeChange}
-          />
-        )}
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="sm:max-w-[500px]">

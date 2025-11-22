@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -7,6 +7,7 @@ export interface Cliente {
   nome: string;
   cpf: string | null;
   email: string | null;
+  ativo: boolean | null;
   empresa_id: string | null;
   created_at: string;
 }
@@ -18,35 +19,42 @@ export interface ClienteFormData {
 }
 
 export function useClientes() {
+  const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const fetchClientes = async (page: number = 1, pageSize: number = 10, searchTerm?: string) => {
+  const fetchClientes = async (searchTerm?: string) => {
     setLoading(true);
+    setError(null);
     try {
-      const from = (page - 1) * pageSize;
-      const to = from + pageSize - 1;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('empresa_id')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile?.empresa_id) throw new Error('Empresa não encontrada');
 
       let query = supabase
         .from('clientes')
-        .select('*', { count: 'exact' })
-        .order('created_at', { ascending: false });
+        .select('*')
+        .eq('empresa_id', profile.empresa_id)
+        .eq('ativo', true);
 
       if (searchTerm) {
         query = query.or(`nome.ilike.%${searchTerm}%,cpf.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
       }
 
-      const { data, error, count } = await query.range(from, to);
-
-      if (error) throw error;
-
-      return {
-        data: data as Cliente[],
-        count: count || 0,
-        totalPages: Math.ceil((count || 0) / pageSize),
-      };
-    } catch (error: any) {
-      toast.error('Erro ao carregar clientes: ' + error.message);
-      return { data: [], count: 0, totalPages: 0 };
+      const { data, error: err } = await query.order('nome');
+      
+      if (err) throw err;
+      setClientes(data || []);
+    } catch (err: any) {
+      setError(err.message);
+      toast.error('Erro ao carregar clientes: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -64,9 +72,7 @@ export function useClientes() {
         .eq('id', user.id)
         .single();
 
-      if (!profile?.empresa_id) {
-        throw new Error('Empresa não encontrada');
-      }
+      if (!profile?.empresa_id) throw new Error('Empresa não encontrada');
 
       const { error } = await supabase
         .from('clientes')
@@ -75,6 +81,7 @@ export function useClientes() {
       if (error) throw error;
 
       toast.success('Cliente cadastrado com sucesso!');
+      await fetchClientes();
       return true;
     } catch (error: any) {
       toast.error('Erro ao cadastrar cliente: ' + error.message);
@@ -95,6 +102,7 @@ export function useClientes() {
       if (error) throw error;
 
       toast.success('Cliente atualizado com sucesso!');
+      await fetchClientes();
       return true;
     } catch (error: any) {
       toast.error('Erro ao atualizar cliente: ' + error.message);
@@ -107,14 +115,36 @@ export function useClientes() {
   const deleteCliente = async (id: string) => {
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('clientes')
-        .delete()
-        .eq('id', id);
+      // Check if there are proposals linked to this client
+      const { data: propostas, error: checkError } = await supabase
+        .from('propostas')
+        .select('id')
+        .eq('cliente_id', id)
+        .limit(1);
 
-      if (error) throw error;
+      if (checkError) throw checkError;
 
-      toast.success('Cliente excluído com sucesso!');
+      if (propostas && propostas.length > 0) {
+        // Soft delete - just deactivate
+        const { error } = await supabase
+          .from('clientes')
+          .update({ ativo: false })
+          .eq('id', id);
+
+        if (error) throw error;
+        toast.success('Cliente desativado com sucesso!');
+      } else {
+        // Hard delete
+        const { error } = await supabase
+          .from('clientes')
+          .delete()
+          .eq('id', id);
+
+        if (error) throw error;
+        toast.success('Cliente excluído com sucesso!');
+      }
+
+      await fetchClientes();
       return true;
     } catch (error: any) {
       toast.error('Erro ao excluir cliente: ' + error.message);
@@ -124,8 +154,14 @@ export function useClientes() {
     }
   };
 
+  useEffect(() => {
+    fetchClientes();
+  }, []);
+
   return {
+    clientes,
     loading,
+    error,
     fetchClientes,
     createCliente,
     updateCliente,

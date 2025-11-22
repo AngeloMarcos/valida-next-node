@@ -30,43 +30,28 @@ export default function Produtos() {
     createProduto,
     updateProduto,
     deleteProduto,
-    updateProdutoStatus,
   } = useProdutos();
 
   const { bancos } = useBancosSelect();
 
   const [produtos, setProdutos] = useState<Produto[]>([]);
-  const [totalItems, setTotalItems] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingProduto, setEditingProduto] = useState<Produto | undefined>();
-
-  // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [bancoFilter, setBancoFilter] = useState<string>('all');
-
-  const loadProdutos = async (
-    page: number = currentPage,
-    size: number = pageSize
-  ) => {
-    const filters: ProdutoFilters = {
-      search: searchTerm || undefined,
-      status: statusFilter !== 'all' ? statusFilter : undefined,
-      banco_id: bancoFilter !== 'all' ? bancoFilter : undefined,
-    };
-
-    const result = await fetchProdutos(page, size, filters);
-    setProdutos(result.data);
-    setTotalItems(result.count);
-    setTotalPages(result.totalPages);
-  };
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingProduto, setEditingProduto] = useState<Produto | undefined>();
 
   useEffect(() => {
+    const loadProdutos = async () => {
+      const result = await fetchProdutos(1, 100, {
+        search: searchTerm || undefined,
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        banco_id: bancoFilter !== 'all' ? bancoFilter : undefined,
+      });
+      setProdutos(result.data);
+    };
     loadProdutos();
-  }, [currentPage, pageSize, searchTerm, statusFilter, bancoFilter]);
+  }, [searchTerm, statusFilter, bancoFilter]);
 
   const handleCreate = () => {
     setEditingProduto(undefined);
@@ -90,38 +75,11 @@ export default function Produtos() {
     if (success) {
       setIsDialogOpen(false);
       setEditingProduto(undefined);
-      loadProdutos();
     }
   };
 
   const handleDelete = async (id: string) => {
-    const success = await deleteProduto(id);
-    if (success) {
-      loadProdutos();
-    }
-  };
-
-  const handleStatusChange = async (id: string, status: string) => {
-    const success = await updateProdutoStatus(id, status);
-    if (success) {
-      loadProdutos();
-    }
-  };
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  const handlePageSizeChange = (size: number) => {
-    setPageSize(size);
-    setCurrentPage(1);
-  };
-
-  const handleClearFilters = () => {
-    setSearchTerm('');
-    setStatusFilter('all');
-    setBancoFilter('all');
-    setCurrentPage(1);
+    await deleteProduto(id);
   };
 
   return (
@@ -180,8 +138,12 @@ export default function Produtos() {
               </SelectContent>
             </Select>
 
-            {(searchTerm || statusFilter || bancoFilter) && (
-              <Button variant="outline" size="sm" onClick={handleClearFilters}>
+            {(searchTerm || statusFilter !== 'all' || bancoFilter !== 'all') && (
+              <Button variant="outline" size="sm" onClick={() => {
+                setSearchTerm('');
+                setStatusFilter('all');
+                setBancoFilter('all');
+              }}>
                 Limpar Filtros
               </Button>
             )}
@@ -193,19 +155,8 @@ export default function Produtos() {
           loading={loading}
           onEdit={handleEdit}
           onDelete={handleDelete}
-          onStatusChange={handleStatusChange}
+          onStatusChange={() => {}}
         />
-
-        {totalItems > 0 && (
-          <ProdutosPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            pageSize={pageSize}
-            totalItems={totalItems}
-            onPageChange={handlePageChange}
-            onPageSizeChange={handlePageSizeChange}
-          />
-        )}
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="sm:max-w-[500px]">

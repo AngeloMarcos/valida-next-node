@@ -505,6 +505,60 @@ export type Database = {
           },
         ]
       }
+      promotoras: {
+        Row: {
+          ativo: boolean | null
+          banco_id: string | null
+          comissao_padrao: number | null
+          contato: string | null
+          created_at: string | null
+          email: string | null
+          empresa_id: string | null
+          id: string
+          nome: string
+          telefone: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          banco_id?: string | null
+          comissao_padrao?: number | null
+          contato?: string | null
+          created_at?: string | null
+          email?: string | null
+          empresa_id?: string | null
+          id?: string
+          nome: string
+          telefone?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          banco_id?: string | null
+          comissao_padrao?: number | null
+          contato?: string | null
+          created_at?: string | null
+          email?: string | null
+          empresa_id?: string | null
+          id?: string
+          nome?: string
+          telefone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotoras_banco_id_fkey"
+            columns: ["banco_id"]
+            isOneToOne: false
+            referencedRelation: "bancos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotoras_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       proposta_anexos: {
         Row: {
           created_at: string | null
