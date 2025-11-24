@@ -1,8 +1,9 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
 import { usePropostaDetalhes } from '@/hooks/usePropostaDetalhes';
 import { PropostaHeader } from '@/components/propostas/PropostaHeader';
@@ -11,44 +12,40 @@ import { PropostaAtividadesTab } from '@/components/propostas/PropostaAtividades
 import { PropostaAnexos } from '@/components/propostas/PropostaAnexos';
 import { PropostaHistoricoTab } from '@/components/propostas/PropostaHistoricoTab';
 
+function LoadingPageSkeleton() {
+  return (
+    <DashboardLayout>
+      <div className="space-y-6">
+        <Skeleton className="h-32 w-full" />
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-96 w-full" />
+      </div>
+    </DashboardLayout>
+  );
+}
+
 export default function PropostaDetalhes() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { proposta, loading, error, refetch } = usePropostaDetalhes(id!);
 
-  if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="space-y-6">
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-12 w-full" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Skeleton className="h-64" />
-            <Skeleton className="h-64" />
-            <Skeleton className="h-64" />
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
+  if (loading) return <LoadingPageSkeleton />;
 
   if (error || !proposta) {
     return (
       <DashboardLayout>
-        <Card className="border-destructive">
-          <CardContent className="p-8 text-center">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center max-w-md">
             <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Proposta não encontrada</h2>
+            <h2 className="text-2xl font-bold mb-2">Proposta não encontrada</h2>
             <p className="text-muted-foreground mb-4">
-              {error || 'A proposta que você está procurando não existe ou foi removida.'}
+              {error || 'A proposta solicitada não existe ou foi removida.'}
             </p>
-            <a
-              href="/propostas"
-              className="text-primary hover:underline"
-            >
-              Voltar para propostas
-            </a>
-          </CardContent>
-        </Card>
+            <Button onClick={() => navigate('/propostas')}>
+              Voltar para Propostas
+            </Button>
+          </div>
+        </div>
       </DashboardLayout>
     );
   }
@@ -59,17 +56,17 @@ export default function PropostaDetalhes() {
         <PropostaHeader proposta={proposta} onUpdate={refetch} />
 
         <Tabs defaultValue="dados" className="w-full">
-          <TabsList className="w-full justify-start overflow-x-auto bg-muted/50 p-1">
-            <TabsTrigger value="dados" className="min-h-[44px] px-4">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-0 bg-muted/50 p-1">
+            <TabsTrigger value="dados" className="text-xs sm:text-sm min-h-[44px]">
               Dados
             </TabsTrigger>
-            <TabsTrigger value="atividades" className="min-h-[44px] px-4">
+            <TabsTrigger value="atividades" className="text-xs sm:text-sm min-h-[44px]">
               Atividades
             </TabsTrigger>
-            <TabsTrigger value="anexos" className="min-h-[44px] px-4">
+            <TabsTrigger value="anexos" className="text-xs sm:text-sm min-h-[44px]">
               Anexos
             </TabsTrigger>
-            <TabsTrigger value="historico" className="min-h-[44px] px-4">
+            <TabsTrigger value="historico" className="text-xs sm:text-sm min-h-[44px]">
               Histórico
             </TabsTrigger>
           </TabsList>
