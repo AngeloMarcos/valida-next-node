@@ -299,9 +299,11 @@ export type Database = {
       }
       conversas: {
         Row: {
+          cliente_id: string | null
           created_at: string | null
           empresa_id: string
           id: string
+          is_group: boolean | null
           is_starred: boolean | null
           nome: string
           origem: string | null
@@ -314,9 +316,11 @@ export type Database = {
           whatsapp_instance_id: string | null
         }
         Insert: {
+          cliente_id?: string | null
           created_at?: string | null
           empresa_id: string
           id?: string
+          is_group?: boolean | null
           is_starred?: boolean | null
           nome: string
           origem?: string | null
@@ -329,9 +333,11 @@ export type Database = {
           whatsapp_instance_id?: string | null
         }
         Update: {
+          cliente_id?: string | null
           created_at?: string | null
           empresa_id?: string
           id?: string
+          is_group?: boolean | null
           is_starred?: boolean | null
           nome?: string
           origem?: string | null
@@ -344,6 +350,13 @@ export type Database = {
           whatsapp_instance_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "conversas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "conversas_empresa_id_fkey"
             columns: ["empresa_id"]
@@ -386,12 +399,14 @@ export type Database = {
           conversa_id: string
           created_at: string | null
           data: string | null
+          direction: string | null
           empresa_id: string
           evolution_message_id: string | null
           evolution_timestamp: number | null
           id: string
           media_url: string | null
           mensagem: string
+          read_at: string | null
           sender_name: string | null
           sender_phone: string | null
           status: string | null
@@ -401,12 +416,14 @@ export type Database = {
           conversa_id: string
           created_at?: string | null
           data?: string | null
+          direction?: string | null
           empresa_id: string
           evolution_message_id?: string | null
           evolution_timestamp?: number | null
           id?: string
           media_url?: string | null
           mensagem: string
+          read_at?: string | null
           sender_name?: string | null
           sender_phone?: string | null
           status?: string | null
@@ -416,12 +433,14 @@ export type Database = {
           conversa_id?: string
           created_at?: string | null
           data?: string | null
+          direction?: string | null
           empresa_id?: string
           evolution_message_id?: string | null
           evolution_timestamp?: number | null
           id?: string
           media_url?: string | null
           mensagem?: string
+          read_at?: string | null
           sender_name?: string | null
           sender_phone?: string | null
           status?: string | null
