@@ -311,6 +311,7 @@ export type Database = {
           ultimo_texto: string | null
           unread: number | null
           updated_at: string | null
+          whatsapp_instance_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -325,6 +326,7 @@ export type Database = {
           ultimo_texto?: string | null
           unread?: number | null
           updated_at?: string | null
+          whatsapp_instance_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -339,6 +341,7 @@ export type Database = {
           ultimo_texto?: string | null
           unread?: number | null
           updated_at?: string | null
+          whatsapp_instance_id?: string | null
         }
         Relationships: [
           {
@@ -346,6 +349,13 @@ export type Database = {
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversas_whatsapp_instance_id_fkey"
+            columns: ["whatsapp_instance_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_instances"
             referencedColumns: ["id"]
           },
         ]
@@ -377,8 +387,13 @@ export type Database = {
           created_at: string | null
           data: string | null
           empresa_id: string
+          evolution_message_id: string | null
+          evolution_timestamp: number | null
           id: string
+          media_url: string | null
           mensagem: string
+          sender_name: string | null
+          sender_phone: string | null
           status: string | null
           tipo: string
         }
@@ -387,8 +402,13 @@ export type Database = {
           created_at?: string | null
           data?: string | null
           empresa_id: string
+          evolution_message_id?: string | null
+          evolution_timestamp?: number | null
           id?: string
+          media_url?: string | null
           mensagem: string
+          sender_name?: string | null
+          sender_phone?: string | null
           status?: string | null
           tipo: string
         }
@@ -397,8 +417,13 @@ export type Database = {
           created_at?: string | null
           data?: string | null
           empresa_id?: string
+          evolution_message_id?: string | null
+          evolution_timestamp?: number | null
           id?: string
+          media_url?: string | null
           mensagem?: string
+          sender_name?: string | null
+          sender_phone?: string | null
           status?: string | null
           tipo?: string
         }
@@ -878,6 +903,74 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      whatsapp_instances: {
+        Row: {
+          always_online: boolean | null
+          api_key: string
+          connected_at: string | null
+          created_at: string | null
+          empresa_id: string
+          groups_ignore: boolean | null
+          id: string
+          instance_id: string
+          instance_name: string
+          integration_type: string | null
+          phone_number: string | null
+          qr_code_expires_at: string | null
+          qr_code_url: string | null
+          read_messages: boolean | null
+          reject_calls: boolean | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          always_online?: boolean | null
+          api_key: string
+          connected_at?: string | null
+          created_at?: string | null
+          empresa_id: string
+          groups_ignore?: boolean | null
+          id?: string
+          instance_id: string
+          instance_name: string
+          integration_type?: string | null
+          phone_number?: string | null
+          qr_code_expires_at?: string | null
+          qr_code_url?: string | null
+          read_messages?: boolean | null
+          reject_calls?: boolean | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          always_online?: boolean | null
+          api_key?: string
+          connected_at?: string | null
+          created_at?: string | null
+          empresa_id?: string
+          groups_ignore?: boolean | null
+          id?: string
+          instance_id?: string
+          instance_name?: string
+          integration_type?: string | null
+          phone_number?: string | null
+          qr_code_expires_at?: string | null
+          qr_code_url?: string | null
+          read_messages?: boolean | null
+          reject_calls?: boolean | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_instances_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
