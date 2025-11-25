@@ -21,18 +21,18 @@ export interface PropostaDetalhada {
     nome: string;
     cpf: string | null;
     email: string | null;
-  };
+  } | null;
   bancos?: {
     id: string;
     nome: string;
     cnpj: string | null;
-  };
+  } | null;
   produtos?: {
     id: string;
     nome: string;
     tipo_credito: string | null;
     taxa_juros: number | null;
-  };
+  } | null;
 }
 
 export function usePropostaDetalhes(id: string) {
