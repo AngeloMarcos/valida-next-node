@@ -12,6 +12,7 @@ import { FormSelect, SelectOption } from "@/components/form/FormSelect";
 import { FormTextarea } from "@/components/form/FormTextarea";
 import { useClientesSelect } from "@/hooks/useClientesSelect";
 import { useBancosSelect } from "@/hooks/useBancosSelect";
+import { useProdutosSelect } from "@/hooks/useProdutosSelect";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -68,9 +69,8 @@ export function PropostaFormDynamic({ onSuccess, onCancel }: PropostaFormDynamic
   const navigate = useNavigate();
   const { clientes, loading: loadingClientes } = useClientesSelect();
   const { bancos, loading: loadingBancos } = useBancosSelect();
+  const { produtos, loading: loadingProdutos } = useProdutosSelect();
 
-  const [produtos, setProdutos] = useState<SelectOption[]>([]);
-  const [loadingProdutos, setLoadingProdutos] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [currentSchema, setCurrentSchema] = useState(baseSchema);
@@ -109,55 +109,11 @@ export function PropostaFormDynamic({ onSuccess, onCancel }: PropostaFormDynamic
     setErrorMessage("");
   }, [tipoProposta]);
 
-  useEffect(() => {
-    if (tipoProposta) {
-      loadProdutos(tipoProposta);
-      setValue("produto_id", "");
-    }
-  }, [tipoProposta, setValue]);
-
-
   // ============================================================================
   // FUNÇÕES DE CARREGAMENTO
   // ============================================================================
-
-  /**
-   * Carregar produtos ativos
-   * ✅ AJUSTADO: Removido filtro por tipo (compatível com estrutura atual)
-   */
-  const loadProdutos = async (tipo: string) => {
-    setLoadingProdutos(true);
-    setErrorMessage("");
-
-    try {
-      const { data, error } = await supabase
-        .from("produtos")
-        .select("id, nome, tipo_credito")
-        .eq("status", "ativo") // ✅ Mudado de .eq("ativo", true) para .eq("status", "ativo")
-        .order("nome", { ascending: true });
-
-      if (error) throw error;
-
-      const mappedProdutos = (data || [])
-        .filter((produto) => produto.id && produto.nome)
-        .map((produto) => ({
-          value: produto.id,
-          label: produto.tipo_credito ? `${produto.nome} - ${produto.tipo_credito}` : produto.nome,
-        }));
-
-      setProdutos(mappedProdutos);
-
-      if (mappedProdutos.length === 0) {
-        setErrorMessage("Nenhum produto ativo encontrado.");
-      }
-    } catch (error: any) {
-      console.error("Erro ao carregar produtos:", error);
-      toast.error("Erro ao carregar produtos");
-      setErrorMessage("Não foi possível carregar a lista de produtos. Tente novamente.");
-    } finally {
-      setLoadingProdutos(false);
-    }
-  };
+  
+  // Produtos já carregados via hook useProdutosSelect
 
 
   // ============================================================================
@@ -357,8 +313,7 @@ export function PropostaFormDynamic({ onSuccess, onCancel }: PropostaFormDynamic
                 label="Produto *"
                 placeholder={loadingProdutos ? "Carregando..." : "Selecione o produto"}
                 options={produtos}
-                disabled={loadingProdutos || !tipoProposta || submitting}
-                helperText={!tipoProposta ? "Selecione o tipo de proposta primeiro" : ""}
+                disabled={loadingProdutos || submitting}
               />
             </div>
           </CardContent>
