@@ -40,7 +40,7 @@ export function AppSidebar() {
   const { state, toggleSidebar } = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut, isAdmin, isGerente } = useAuth();
+  const { signOut, isAdmin, isSupervisor } = useAuth();
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
 
@@ -102,7 +102,7 @@ export function AppSidebar() {
                   return null;
                 }
                 // Hide manager-access items for agents
-                if (item.managerAccess && !isAdmin && !isGerente) {
+                if (item.managerAccess && !isAdmin && !isSupervisor) {
                   return null;
                 }
                 

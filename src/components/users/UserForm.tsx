@@ -20,7 +20,7 @@ const userSchema = yup.object({
   role: yup
     .string()
     .required('Perfil é obrigatório')
-    .oneOf(['admin', 'gerente', 'agente'], 'Perfil inválido'),
+    .oneOf(['admin', 'supervisor', 'correspondente'], 'Perfil inválido'),
   status: yup
     .string()
     .required('Status é obrigatório')
@@ -36,8 +36,8 @@ interface UserFormProps {
 
 const roleOptions = [
   { value: 'admin', label: 'Administrador' },
-  { value: 'gerente', label: 'Gerente' },
-  { value: 'agente', label: 'Agente' },
+  { value: 'supervisor', label: 'Supervisor' },
+  { value: 'correspondente', label: 'Correspondente' },
 ];
 
 const statusOptions = [
@@ -51,7 +51,7 @@ export function UserForm({ user, onSubmit, onCancel, loading }: UserFormProps) {
     defaultValues: {
       nome: user?.nome || '',
       email: user?.email || '',
-      role: user?.role || 'agente',
+      role: user?.role || 'correspondente',
       status: user?.status || 'active',
     },
   });

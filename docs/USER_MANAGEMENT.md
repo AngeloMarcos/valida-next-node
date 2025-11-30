@@ -18,13 +18,13 @@ The User Management module allows administrators to manage users within their co
 - Accessible via "Novo Usuário" button
 - Opens a modal dialog with the user form
 - Sends an invitation email to the new user
-- Assigns default role (agente) unless specified otherwise
+- Assigns default role (correspondente) unless specified otherwise
 - User is automatically assigned to the admin's company
 
 **Fields:**
 - Nome* (Name) - Required, 3-100 characters, trimmed
 - Email* - Required, valid email format, trimmed
-- Perfil* (Role) - Required, one of: admin, gerente, agente
+- Perfil* (Role) - Required, one of: admin, supervisor, correspondente
 - Status* - Required, one of: active, inactive
 
 #### Edit User
@@ -62,8 +62,8 @@ The User Management module allows administrators to manage users within their co
 | Role | Portuguese | Permissions |
 |------|-----------|-------------|
 | admin | Administrador | Full access to all features including user management |
-| gerente | Gerente | Limited delete permissions on some resources |
-| agente | Agente | Basic access to create and view records |
+| supervisor | Supervisor | Limited delete permissions on some resources |
+| correspondente | Correspondente | Basic access to create and view records |
 
 ## Technical Implementation
 
@@ -97,7 +97,7 @@ updated_at   | timestamp
 ```sql
 id           | uuid    | Primary key
 user_id      | uuid    | Foreign key to auth.users
-role         | app_role| Enum: admin, gerente, agente
+role         | app_role| Enum: admin, supervisor, correspondente
 empresa_id   | uuid    | Foreign key to empresas table
 created_at   | timestamp
 ```
@@ -141,7 +141,7 @@ created_at   | timestamp
    - Creates user in Supabase Auth with temporary password
    - Assigns user to admin's company
    - Creates profile record with user metadata
-   - Assigns specified role (or default 'agente')
+   - Assigns specified role (or default 'correspondente')
    - Sends invitation email
 5. Success toast notification
 6. Modal closes and list refreshes
@@ -177,7 +177,7 @@ All form fields use Yup schema validation:
   
   role: string()
     .required()
-    .oneOf(['admin', 'gerente', 'agente']),
+    .oneOf(['admin', 'supervisor', 'correspondente']),
   
   status: string()
     .required()

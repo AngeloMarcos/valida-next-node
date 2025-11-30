@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 
-export type UserRole = 'admin' | 'gerente' | 'agente';
+export type UserRole = 'admin' | 'supervisor' | 'correspondente';
 export type UserStatus = 'active' | 'inactive';
 
 export interface User {
@@ -90,7 +90,7 @@ export function useUsers() {
           email: profile.email,
           empresa_id: profile.empresa_id,
           empresa_nome: empresa?.nome || '',
-          role: (userRole?.role as UserRole) || 'agente',
+          role: (userRole?.role as UserRole) || 'correspondente',
           status: 'active' as UserStatus,
           created_at: profile.created_at || '',
         };
