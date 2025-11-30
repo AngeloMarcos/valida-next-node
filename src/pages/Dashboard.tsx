@@ -2,38 +2,52 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { StatCard } from "@/components/StatCard";
-import { QuickActionCard } from "@/components/QuickActionCard";
-import { Users, FileText, CheckCircle, DollarSign, FileSearch, TrendingUp, Plus, UserPlus, Search, Calendar as CalendarIcon } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { Users, FileText, TrendingUp, DollarSign, Award, AlertCircle, Clock } from "lucide-react";
 import { useOnboarding } from "@/hooks/useOnboarding";
-import { useDashboardData } from "@/hooks/useDashboardData";
+import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarChart, Bar } from "recharts";
-import { format } from "date-fns";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarChart, Bar, Legend } from "recharts";
+import { format, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
-import { Calendar } from "@/components/ui/calendar";
-
-interface DashboardKPIs {
-  total_clientes: number;
-  total_propostas: number;
-  propostas_aprovadas: number;
-  propostas_pendentes: number;
-  propostas_analise: number;
-  valor_total_aprovado: number;
-  ticket_medio: number;
-  taxa_aprovacao: number;
-}
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { loading: onboardingLoading, onboardingCompleted } = useOnboarding();
-  const [stats, setStats] = useState<DashboardKPIs | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const { trends, statusBreakdown, recentPropostas, loading: dashboardLoading } = useDashboardData();
+  
+  // Filtros do dashboard
+  const [periodo, setPeriodo] = useState<string>('mes_atual');
+  const [usuarioId, setUsuarioId] = useState<string | undefined>();
+  const [produtoId, setProdutoId] = useState<string | undefined>();
+  const [usuarios, setUsuarios] = useState<Array<{ id: string; nome: string }>>([]);
+  const [produtos, setProdutos] = useState<Array<{ id: string; nome: string }>>([]);
+  const [chartMode, setChartMode] = useState<'quantidade' | 'valor'>('quantidade');
+
+  // Calcular datas do filtro de período
+  const getFilterDates = () => {
+    const now = new Date();
+    switch (periodo) {
+      case 'mes_atual':
+        return { startDate: startOfMonth(now), endDate: endOfMonth(now) };
+      case 'mes_anterior':
+        const mesAnterior = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        return { startDate: startOfMonth(mesAnterior), endDate: endOfMonth(mesAnterior) };
+      default:
+        return { startDate: startOfMonth(now), endDate: endOfMonth(now) };
+    }
+  };
+
+  const filters = {
+    ...getFilterDates(),
+    usuarioId,
+    produtoId
+  };
+
+  const { metrics, loading } = useDashboardMetrics(filters);
 
   // Verifica se o onboarding foi completado e redireciona se necessário
   useEffect(() => {
@@ -42,10 +56,11 @@ export default function Dashboard() {
     }
   }, [onboardingLoading, onboardingCompleted, navigate]);
 
-  const loadStats = async () => {
-    try {
+  // Carregar lista de usuários e produtos para os filtros
+  useEffect(() => {
+    const loadFilters = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado');
+      if (!user) return;
 
       const { data: profile } = await supabase
         .from('profiles')
@@ -53,58 +68,44 @@ export default function Dashboard() {
         .eq('id', user.id)
         .single();
 
-      if (!profile?.empresa_id) {
-        throw new Error('Empresa não encontrada');
-      }
+      if (!profile?.empresa_id) return;
 
-      const { data, error } = await supabase
-        .rpc('get_dashboard_kpis', { _empresa_id: profile.empresa_id });
+      const { data: usuariosData } = await supabase
+        .from('profiles')
+        .select('id, nome')
+        .eq('empresa_id', profile.empresa_id);
 
-      if (error) throw error;
+      const { data: produtosData } = await supabase
+        .from('produtos')
+        .select('id, nome')
+        .eq('empresa_id', profile.empresa_id);
 
-      if (data && typeof data === 'object') {
-        setStats(data as unknown as DashboardKPIs);
-      }
-    } catch (error: any) {
-      toast.error("Erro ao carregar estatísticas: " + error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadStats();
-
-    // Atualizar em tempo real quando houver mudanças
-    const channel = supabase
-      .channel('dashboard-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'clientes' },
-        () => loadStats()
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'propostas' },
-        () => loadStats()
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
+      setUsuarios(usuariosData || []);
+      setProdutos(produtosData || []);
     };
+
+    loadFilters();
   }, []);
 
-  if (isLoading || dashboardLoading) {
+  // Função auxiliar para calcular variação percentual
+  const calcularVariacao = (atual: number, anterior: number) => {
+    if (anterior === 0) return 0;
+    return ((atual - anterior) / anterior) * 100;
+  };
+
+  if (loading) {
     return (
       <DashboardLayout>
         <div className="space-y-4">
-          <div>
-            <div className="h-8 w-48 bg-muted rounded animate-pulse mb-2" />
-            <div className="h-4 w-64 bg-muted rounded animate-pulse" />
+          <div className="flex justify-between items-center">
+            <div>
+              <div className="h-8 w-48 bg-muted rounded animate-pulse mb-2" />
+              <div className="h-4 w-64 bg-muted rounded animate-pulse" />
+            </div>
+            <div className="h-10 w-80 bg-muted rounded animate-pulse" />
           </div>
-          <div className="grid gap-2.5 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+          <div className="grid gap-2.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="h-[110px] min-w-[170px] bg-muted/50 rounded-lg border animate-pulse" />
             ))}
           </div>
@@ -113,58 +114,100 @@ export default function Dashboard() {
     );
   }
 
+  const kpis = metrics?.kpis;
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-          <p className="text-muted-foreground">
-            Visão geral do seu sistema de CRM
-          </p>
+        {/* Cabeçalho com filtros */}
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Dashboard de Vendas</h2>
+            <p className="text-muted-foreground">
+              Visão operacional completa do seu CRM
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Select value={periodo} onValueChange={setPeriodo}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="Período" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="mes_atual">Mês Atual</SelectItem>
+                <SelectItem value="mes_anterior">Mês Anterior</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={usuarioId || 'todos'} onValueChange={(v) => setUsuarioId(v === 'todos' ? undefined : v)}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="Usuário" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                {usuarios.map(u => (
+                  <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={produtoId || 'todos'} onValueChange={(v) => setProdutoId(v === 'todos' ? undefined : v)}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="Produto" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                {produtos.map(p => (
+                  <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        <div className="grid gap-2.5 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 overflow-x-auto pb-1">
+        {/* Cards de KPIs - Topo */}
+        <div className="grid gap-2.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 overflow-x-auto pb-1">
           <StatCard
-            title="Clientes"
-            value={stats?.total_clientes || 0}
-            icon={Users}
-            iconColor="primary"
-            description="Total cadastrados"
-            trend={{ value: 12.5, isPositive: true }}
-            sparklineData={trends.slice(0, 7).map(t => ({ value: t.count || 0 }))}
-          />
-          <StatCard
-            title="Propostas"
-            value={stats?.total_propostas || 0}
+            title="Propostas Mês"
+            value={kpis?.propostas_mes || 0}
             icon={FileText}
             iconColor="primary"
-            description="Total cadastradas"
-            trend={{ value: 8.2, isPositive: true }}
-            sparklineData={trends.slice(0, 7).map(t => ({ value: t.count || 0 }))}
+            description="Total no período"
+            trend={{
+              value: calcularVariacao(kpis?.propostas_mes || 0, kpis?.propostas_mes_anterior || 0),
+              isPositive: (kpis?.propostas_mes || 0) >= (kpis?.propostas_mes_anterior || 0)
+            }}
+          />
+          <StatCard
+            title="Valor do Mês"
+            value={new Intl.NumberFormat('pt-BR', {
+              style: 'currency',
+              currency: 'BRL',
+              notation: 'compact',
+              maximumFractionDigits: 1
+            }).format(kpis?.valor_mes || 0)}
+            icon={DollarSign}
+            iconColor="primary"
+            description="Valor total"
+            trend={{
+              value: calcularVariacao(kpis?.valor_mes || 0, kpis?.valor_mes_anterior || 0),
+              isPositive: (kpis?.valor_mes || 0) >= (kpis?.valor_mes_anterior || 0)
+            }}
           />
           <StatCard
             title="Em Análise"
-            value={stats?.propostas_analise || 0}
-            icon={FileSearch}
+            value={kpis?.em_analise || 0}
+            icon={AlertCircle}
             iconColor="warning"
-            description="Aguardando"
-            trend={{ value: -3.1, isPositive: false }}
+            description="Abertas agora"
           />
           <StatCard
-            title="Aprovação"
-            value={`${(stats?.taxa_aprovacao || 0).toFixed(1)}%`}
+            title="Taxa Aprovação"
+            value={`${(kpis?.taxa_aprovacao_mes || 0).toFixed(1)}%`}
             icon={TrendingUp}
             iconColor="primary"
-            description="Taxa atual"
-            trend={{ value: 5.4, isPositive: true }}
-          />
-          <StatCard
-            title="Aprovadas"
-            value={stats?.propostas_aprovadas || 0}
-            icon={CheckCircle}
-            iconColor="primary"
-            description="Finalizadas"
-            trend={{ value: 15.8, isPositive: true }}
+            description="Do mês"
+            trend={{
+              value: (kpis?.taxa_aprovacao_mes || 0) - (kpis?.taxa_aprovacao_mes_anterior || 0),
+              isPositive: (kpis?.taxa_aprovacao_mes || 0) >= (kpis?.taxa_aprovacao_mes_anterior || 0)
+            }}
           />
           <StatCard
             title="Ticket Médio"
@@ -173,170 +216,176 @@ export default function Dashboard() {
               currency: 'BRL',
               notation: 'compact',
               maximumFractionDigits: 1
-            }).format(stats?.ticket_medio || 0)}
+            }).format(kpis?.ticket_medio_mes || 0)}
             icon={DollarSign}
             iconColor="primary"
-            description="Média aprovado"
-            trend={{ value: 7.3, isPositive: true }}
+            description="Aprovado"
+            trend={{
+              value: calcularVariacao(kpis?.ticket_medio_mes || 0, kpis?.ticket_medio_mes_anterior || 0),
+              isPositive: (kpis?.ticket_medio_mes || 0) >= (kpis?.ticket_medio_mes_anterior || 0)
+            }}
           />
-          <StatCard
-            title="Total"
-            value={new Intl.NumberFormat('pt-BR', {
-              style: 'currency',
-              currency: 'BRL',
-              notation: 'compact',
-              maximumFractionDigits: 1
-            }).format(stats?.valor_total_aprovado || 0)}
-            icon={DollarSign}
-            iconColor="primary"
-            description="Valor aprovado"
-            trend={{ value: 22.1, isPositive: true }}
-          />
-          <StatCard
-            title="Pendentes"
-            value={stats?.propostas_pendentes || 0}
-            icon={FileText}
-            iconColor="muted"
-            description="Em aberto"
-            trend={{ value: -1.5, isPositive: false }}
-          />
+          {kpis?.melhor_vendedor && (
+            <StatCard
+              title="Top Vendedor"
+              value={new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+                notation: 'compact',
+                maximumFractionDigits: 1
+              }).format(kpis.melhor_vendedor.valor)}
+              icon={Award}
+              iconColor="primary"
+              description={kpis.melhor_vendedor.nome}
+            />
+          )}
         </div>
 
-        <div className="space-y-2.5">
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Ações Rápidas</h3>
-          <div className="flex gap-2.5 flex-wrap">
-            <QuickActionCard
-              title="Nova Proposta"
-              icon={Plus}
-              onClick={() => navigate('/propostas?new=true')}
-            />
-            <QuickActionCard
-              title="Novo Cliente"
-              icon={UserPlus}
-              onClick={() => navigate('/clientes?new=true')}
-            />
-            <QuickActionCard
-              title="Consultar Propostas"
-              icon={Search}
-              onClick={() => navigate('/propostas')}
-            />
-            <QuickActionCard
-              title="Calendário"
-              icon={CalendarIcon}
-              onClick={() => {}}
-            />
-          </div>
-        </div>
-
-        <div className="grid gap-4 lg:grid-cols-7">
-          <Card className="col-span-4">
+        {/* Gráficos - Meio */}
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Card>
             <CardHeader>
-              <CardTitle>Tendência de Propostas</CardTitle>
-              <CardDescription>Últimos 6 meses</CardDescription>
-            </CardHeader>
-            <CardContent className="pl-2">
-              {dashboardLoading ? (
-                <div className="h-[300px] flex items-center justify-center">
-                  <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>Evolução de Vendas</CardTitle>
+                  <CardDescription>Últimos 30 dias</CardDescription>
                 </div>
-              ) : (
-                <ChartContainer
-                  config={{
-                    count: { label: "Propostas", color: "hsl(var(--chart-1))" },
-                    total_valor: { label: "Valor Total", color: "hsl(var(--chart-2))" },
-                  }}
-                  className="h-[300px]"
-                >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={trends}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                      <XAxis
-                        dataKey="month"
-                        className="text-xs"
-                        tickFormatter={(value) => {
-                          const [year, month] = value.split('-');
-                          return format(new Date(parseInt(year), parseInt(month) - 1), 'MMM', { locale: ptBR });
-                        }}
-                      />
-                      <YAxis className="text-xs" />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Line
-                        type="monotone"
-                        dataKey="count"
-                        stroke="hsl(var(--chart-1))"
-                        strokeWidth={2}
-                        dot={{ fill: "hsl(var(--chart-1))" }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="col-span-3">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold">Calendário</CardTitle>
-              <CardDescription className="text-xs">Atividades</CardDescription>
-            </CardHeader>
-            <CardContent className="p-3 pt-0">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={setSelectedDate}
-                className="rounded-md border-0 text-xs [&_.rdp-day]:text-xs [&_.rdp-day]:h-7 [&_.rdp-day]:w-7 [&_.rdp-caption]:text-xs"
-              />
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-          <Card className="col-span-4">
-            <CardHeader>
-              <CardTitle>Propostas por Status</CardTitle>
-              <CardDescription>Distribuição atual</CardDescription>
+                <Select value={chartMode} onValueChange={(v: any) => setChartMode(v)}>
+                  <SelectTrigger className="w-[130px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="quantidade">Quantidade</SelectItem>
+                    <SelectItem value="valor">Valor (R$)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </CardHeader>
             <CardContent>
-              {dashboardLoading ? (
-                <div className="h-[300px] flex items-center justify-center">
-                  <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
-                </div>
-              ) : (
-                <ChartContainer
-                  config={{
-                    count: { label: "Quantidade", color: "hsl(var(--chart-1))" },
-                  }}
-                  className="h-[300px]"
-                >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={statusBreakdown}>
-                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                      <XAxis dataKey="status" className="text-xs" />
-                      <YAxis className="text-xs" />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Bar dataKey="count" fill="hsl(var(--chart-1))" radius={[8, 8, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
-              )}
+              <ChartContainer
+                config={{
+                  quantidade: { label: "Quantidade", color: "hsl(var(--chart-1))" },
+                  valor: { label: "Valor", color: "hsl(var(--chart-2))" },
+                }}
+                className="h-[300px]"
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={metrics?.trends || []}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis
+                      dataKey="date"
+                      className="text-xs"
+                      tickFormatter={(value) => format(new Date(value), 'dd/MM', { locale: ptBR })}
+                    />
+                    <YAxis className="text-xs" />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Line
+                      type="monotone"
+                      dataKey={chartMode}
+                      stroke={chartMode === 'quantidade' ? "hsl(var(--chart-1))" : "hsl(var(--chart-2))"}
+                      strokeWidth={2}
+                      dot={{ fill: chartMode === 'quantidade' ? "hsl(var(--chart-1))" : "hsl(var(--chart-2))" }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </ChartContainer>
             </CardContent>
           </Card>
 
-          <Card className="col-span-3">
+          <Card>
             <CardHeader>
-              <CardTitle>Propostas Recentes</CardTitle>
-              <CardDescription>Últimas 5 propostas</CardDescription>
+              <CardTitle>Funil de Status</CardTitle>
+              <CardDescription>Distribuição por etapa</CardDescription>
             </CardHeader>
             <CardContent>
-              {dashboardLoading ? (
-                <div className="space-y-2">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div key={i} className="h-16 bg-muted rounded animate-pulse" />
-                  ))}
+              <ChartContainer
+                config={{
+                  quantidade: { label: "Quantidade", color: "hsl(var(--chart-1))" },
+                  valor: { label: "Valor Total", color: "hsl(var(--chart-2))" },
+                }}
+                className="h-[300px]"
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={metrics?.statusFunnel || []}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="status" className="text-xs" />
+                    <YAxis className="text-xs" />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Legend />
+                    <Bar dataKey="quantidade" fill="hsl(var(--chart-1))" radius={[8, 8, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Listas Operacionais - Bottom */}
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-warning" />
+                <div>
+                  <CardTitle>Propostas para Hoje</CardTitle>
+                  <CardDescription>Atrasadas ou requerem atenção (criadas há +3 dias em aberto)</CardDescription>
                 </div>
-              ) : (
-                <div className="space-y-2">
-                  {recentPropostas.map((proposta) => (
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {metrics?.propostasHoje && metrics.propostasHoje.length > 0 ? (
+                  metrics.propostasHoje.map((proposta) => (
+                    <div
+                      key={proposta.id}
+                      className="flex items-center gap-2.5 cursor-pointer hover:bg-muted/30 p-2 rounded-md transition-all border border-transparent hover:border-border/50"
+                      onClick={() => navigate(`/propostas/${proposta.id}`)}
+                    >
+                      <Badge
+                        variant={proposta.status === 'em_analise' ? 'default' : 'secondary'}
+                        className="text-[9px] h-5 px-1.5 font-semibold flex-shrink-0 rounded-sm"
+                      >
+                        {proposta.status}
+                      </Badge>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold truncate leading-tight">{proposta.cliente_nome}</p>
+                        <p className="text-[10px] text-muted-foreground/70 truncate leading-tight">
+                          {proposta.produto_nome} • {proposta.banco_nome}
+                        </p>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-xs font-bold">
+                          {new Intl.NumberFormat('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL',
+                            notation: 'compact',
+                            maximumFractionDigits: 1
+                          }).format(proposta.valor)}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {format(new Date(proposta.data), 'dd/MM', { locale: ptBR })}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Nenhuma proposta pendente
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Últimas Propostas Criadas</CardTitle>
+              <CardDescription>10 mais recentes</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {metrics?.ultimasPropostas && metrics.ultimasPropostas.length > 0 ? (
+                  metrics.ultimasPropostas.map((proposta) => (
                     <div
                       key={proposta.id}
                       className="flex items-center gap-2.5 cursor-pointer hover:bg-muted/30 p-2 rounded-md transition-all border border-transparent hover:border-border/50"
@@ -357,7 +406,7 @@ export default function Dashboard() {
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold truncate leading-tight">{proposta.cliente_nome}</p>
                         <p className="text-[10px] text-muted-foreground/70 truncate leading-tight">
-                          {proposta.produto_nome} • {proposta.banco_nome}
+                          {proposta.produto_nome}
                         </p>
                       </div>
                       <div className="text-right flex-shrink-0">
@@ -369,11 +418,18 @@ export default function Dashboard() {
                             maximumFractionDigits: 1
                           }).format(proposta.valor)}
                         </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {format(new Date(proposta.data), 'dd/MM', { locale: ptBR })}
+                        </p>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Nenhuma proposta encontrada
+                  </p>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>
