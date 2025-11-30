@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -147,6 +147,14 @@ export default function Login() {
                   {loginErrors.password && (
                     <p className="text-sm text-destructive">{loginErrors.password}</p>
                   )}
+                </div>
+                <div className="flex items-center justify-end">
+                  <Link 
+                    to="/forgot-password" 
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Esqueceu a senha?
+                  </Link>
                 </div>
                 <Button type="submit" className="w-full" disabled={loginLoading}>
                   {loginLoading ? "Entrando..." : "Entrar"}
