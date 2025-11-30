@@ -6,20 +6,20 @@ This document describes the complete RBAC implementation for the application.
 
 The system implements a secure, role-based access control system with three roles:
 - **admin**: Full access to all features
-- **gerente** (manager): Can manage most resources, limited delete permissions
-- **agente** (agent): Basic access, can view and create proposals
+- **supervisor** (manager): Can manage most resources, limited delete permissions
+- **correspondente** (agent): Basic access, can view and create proposals
 
 ## Database Schema
 
 ### User Roles Table
 
 ```sql
-CREATE TYPE public.app_role AS ENUM ('admin', 'gerente', 'agente');
+CREATE TYPE public.app_role AS ENUM ('admin', 'supervisor', 'correspondente');
 
 CREATE TABLE public.user_roles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  role public.app_role NOT NULL DEFAULT 'agente',
+  role public.app_role NOT NULL DEFAULT 'correspondente',
   empresa_id UUID NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   UNIQUE(user_id, role, empresa_id)
@@ -143,7 +143,7 @@ The AuthContext provides:
 import { useAuth } from '@/contexts/AuthContext';
 
 function MyComponent() {
-  const { user, profile, roles, hasRole, isAdmin, isGerente } = useAuth();
+  const { user, profile, roles, hasRole, isAdmin, isSupervisor } = useAuth();
   
   // Check specific role
   if (hasRole('admin')) {
@@ -155,7 +155,7 @@ function MyComponent() {
     // Admin code
   }
   
-  if (isGerente) {
+  if (isSupervisor) {
     // Manager or admin code
   }
 }
@@ -186,8 +186,8 @@ Require any of multiple roles:
 import { useRequireAnyRole } from '@/hooks/useRequireRole';
 
 function ManagerPage() {
-  // Redirects if user is neither admin nor gerente
-  useRequireAnyRole(['admin', 'gerente']);
+  // Redirects if user is neither admin nor supervisor
+  useRequireAnyRole(['admin', 'supervisor']);
   
   return <div>Manager content</div>;
 }
@@ -210,7 +210,7 @@ function MyComponent() {
       </RoleGuard>
       
       <RoleGuard 
-        requiredRole="gerente"
+        requiredRole="supervisor"
         fallback={<p>You need manager access</p>}
       >
         <AdminPanel />
@@ -229,7 +229,7 @@ import { AnyRoleGuard } from '@/components/RoleGuard';
 
 function MyComponent() {
   return (
-    <AnyRoleGuard requiredRoles={['admin', 'gerente']}>
+    <AnyRoleGuard requiredRoles={['admin', 'supervisor']}>
       <AdvancedFeatures />
     </AnyRoleGuard>
   );
@@ -241,9 +241,9 @@ function MyComponent() {
 | Resource | View | Create | Update | Delete |
 |----------|------|--------|--------|--------|
 | **Bancos** | All | All | All | Admin |
-| **Clientes** | All | All | All | Admin/Gerente |
-| **Produtos** | All | Admin/Gerente | Admin/Gerente | Admin |
-| **Propostas** | All | All | All | Admin/Gerente |
+| **Clientes** | All | All | All | Admin/Supervisor |
+| **Produtos** | All | Admin/Supervisor | Admin/Supervisor | Admin |
+| **Propostas** | All | All | All | Admin/Supervisor |
 
 ## Security Best Practices
 
@@ -279,9 +279,9 @@ VALUES ('00000000-0000-0000-0000-000000000001', 'Test Company', '00.000.000/0000
 INSERT INTO public.user_roles (user_id, role, empresa_id)
 VALUES ('<user_id>', 'admin', '00000000-0000-0000-0000-000000000001');
 
--- Make user gerente
+-- Make user supervisor
 INSERT INTO public.user_roles (user_id, role, empresa_id)
-VALUES ('<user_id>', 'gerente', '00000000-0000-0000-0000-000000000001');
+VALUES ('<user_id>', 'supervisor', '00000000-0000-0000-0000-000000000001');
 ```
 
 ## Troubleshooting

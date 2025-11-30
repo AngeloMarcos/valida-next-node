@@ -10,7 +10,7 @@ const corsHeaders = {
 interface CreateUserRequest {
   email: string;
   nome: string;
-  role: 'admin' | 'gerente' | 'agente';
+  role: 'admin' | 'supervisor' | 'correspondente';
   empresa_id: string;
 }
 
@@ -92,7 +92,7 @@ serve(async (req) => {
     }
 
     // Update role if not default
-    if (role !== "agente") {
+    if (role !== "correspondente") {
       const { error: roleUpdateError } = await supabaseAdmin
         .from("user_roles")
         .update({ role })

@@ -11,7 +11,7 @@ import { ActivityLogPagination } from '@/components/activity/ActivityLogPaginati
 import { useRequireAnyRole } from '@/hooks/useRequireRole';
 
 export default function ActivityLog() {
-  const { hasAnyRole, loading: authLoading } = useRequireAnyRole(['admin', 'gerente']);
+  const { hasAnyRole, loading: authLoading } = useRequireAnyRole(['admin', 'supervisor']);
   const { loading, fetchLogs, fetchUsers } = useActivityLog();
 
   const [logs, setLogs] = useState<ActivityLogType[]>([]);

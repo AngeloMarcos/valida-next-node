@@ -37,7 +37,7 @@ export function PropostaAnexosTab({ propostaId }: PropostaAnexosTabProps) {
   const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
   
   const { loading, fetchDocumentos, createDocumento, updateDocumento } = usePropostaDocumentos();
-  const { profile, isAdmin, isGerente } = useAuth();
+  const { profile, isAdmin, isSupervisor } = useAuth();
 
   useEffect(() => {
     loadDocumentos();
@@ -197,7 +197,7 @@ export function PropostaAnexosTab({ propostaId }: PropostaAnexosTabProps) {
       {/* Adicionar Documento */}
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Checklist de Documentos</h3>
-        {(isAdmin || isGerente) && (
+        {(isAdmin || isSupervisor) && (
           <Dialog open={openNewDoc} onOpenChange={setOpenNewDoc}>
             <DialogTrigger asChild>
               <Button size="sm">+ Adicionar Documento</Button>
@@ -339,7 +339,7 @@ export function PropostaAnexosTab({ propostaId }: PropostaAnexosTabProps) {
                         </Button>
                       )}
 
-                      {doc.status_documento === 'enviado' && (isAdmin || isGerente) && (
+                      {doc.status_documento === 'enviado' && (isAdmin || isSupervisor) && (
                         <Button
                           size="sm"
                           onClick={() => handleAprovar(doc)}

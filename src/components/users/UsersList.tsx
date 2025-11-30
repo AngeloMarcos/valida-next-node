@@ -34,14 +34,14 @@ interface UsersListProps {
 
 const roleLabels: Record<UserRole, string> = {
   admin: 'Administrador',
-  gerente: 'Gerente',
-  agente: 'Agente',
+  supervisor: 'Supervisor',
+  correspondente: 'Correspondente',
 };
 
 const roleColors: Record<UserRole, 'default' | 'secondary' | 'destructive' | 'outline'> = {
   admin: 'destructive',
-  gerente: 'secondary',
-  agente: 'default',
+  supervisor: 'secondary',
+  correspondente: 'default',
 };
 
 export function UsersList({

@@ -39,7 +39,7 @@ describe('UserForm', () => {
       email: 'joao@empresa.com',
       empresa_id: '456',
       empresa_nome: 'Empresa Teste',
-      role: 'gerente',
+      role: 'supervisor',
       status: 'active',
       created_at: '2024-01-01',
     };

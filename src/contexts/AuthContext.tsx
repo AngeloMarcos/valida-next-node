@@ -3,7 +3,7 @@ import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-export type UserRole = 'admin' | 'gerente' | 'agente';
+export type UserRole = 'admin' | 'supervisor' | 'correspondente';
 
 export interface UserProfile {
   id: string;
@@ -23,7 +23,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   hasRole: (role: UserRole) => boolean;
   isAdmin: boolean;
-  isGerente: boolean;
+  isSupervisor: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -212,7 +212,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const isAdmin = roles.includes('admin');
-  const isGerente = roles.includes('gerente') || isAdmin;
+  const isSupervisor = roles.includes('supervisor') || isAdmin;
 
   const value = {
     user,
@@ -225,7 +225,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signOut,
     hasRole,
     isAdmin,
-    isGerente,
+    isSupervisor,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
