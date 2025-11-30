@@ -13,7 +13,7 @@ export interface Proposta {
   observacoes: string | null;
   finalidade: string | null;
   status: string;
-  tipo_proposta: 'credito' | 'consorcio' | 'seguro';
+  tipo_proposta: 'credito' | 'consorcio' | 'seguro' | 'cartao_credito';
   detalhes_produto: any;
   clientes?: {
     id: string;
@@ -39,7 +39,7 @@ export interface PropostaFormData {
   finalidade?: string;
   observacoes?: string;
   status: string;
-  tipo_proposta: 'credito' | 'consorcio' | 'seguro';
+  tipo_proposta: 'credito' | 'consorcio' | 'seguro' | 'cartao_credito';
   detalhes_produto?: any;
 }
 
@@ -47,7 +47,7 @@ export interface PropostaFilters {
   status?: string;
   banco_id?: string;
   search?: string;
-  tipo_proposta?: 'credito' | 'consorcio' | 'seguro';
+  tipo_proposta?: 'credito' | 'consorcio' | 'seguro' | 'cartao_credito';
 }
 
 export function usePropostas() {

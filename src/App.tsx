@@ -11,6 +11,7 @@ import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
 import Clientes from "./pages/Clientes";
 import Propostas from "./pages/Propostas";
+import KanbanPropostas from "./pages/KanbanPropostas";
 import CreateProposta from "./pages/CreateProposta";
 import PropostaDetail from "./pages/PropostaDetail";
 import PropostaDetalhes from "./pages/PropostaDetalhes";
@@ -51,6 +52,7 @@ const App = () => (
             <Route path="/produtos" element={<Navigate to="/cadastros/produtos" replace />} />
             
             <Route path="/propostas" element={<Propostas />} />
+            <Route path="/propostas/kanban" element={<KanbanPropostas />} />
             <Route path="/propostas/criar" element={<CreateProposta />} />
             <Route path="/propostas/:id/detalhes" element={<PropostaDetalhes />} />
             <Route path="/propostas/:id" element={<PropostaDetail />} />
