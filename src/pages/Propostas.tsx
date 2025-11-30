@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,6 +31,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function Propostas() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const editId = searchParams.get('edit');
   const openNew = searchParams.get('new');
 
@@ -192,7 +193,7 @@ export default function Propostas() {
               Gerencie as propostas comerciais do sistema
             </p>
           </div>
-          <Button onClick={handleCreate}>
+          <Button onClick={() => navigate('/propostas/criar')}>
             <Plus className="h-4 w-4 mr-2" />
             Nova Proposta
           </Button>
