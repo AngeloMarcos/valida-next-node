@@ -24,7 +24,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 
 const baseSchema = z.object({
   cliente_id: z.string().min(1, "Cliente é obrigatório"),
-  tipo_proposta: z.enum(["credito", "consorcio", "seguro"], {
+  tipo_proposta: z.enum(["credito", "consorcio", "seguro", "cartao_credito"], {
     required_error: "Tipo de proposta é obrigatório",
   }),
   produto_id: z.string().min(1, "Produto é obrigatório"),
@@ -54,6 +54,10 @@ const seguroSchema = z.object({
   tipo_seguro: z.string().min(1, "Tipo de seguro é obrigatório"),
   valor_premio: z.number().min(0.01, "Valor do prêmio deve ser maior que zero"),
   valor_cobertura: z.number().min(0.01, "Valor de cobertura deve ser maior que zero"),
+});
+
+const cartaoSchema = z.object({
+  limite_desejado: z.number().min(0.01, "Limite desejado deve ser maior que zero"),
 });
 
 // ============================================================================
@@ -100,6 +104,8 @@ export default function CreateProposta() {
       newSchema = baseSchema.merge(consorcioSchema);
     } else if (tipoProposta === "seguro") {
       newSchema = baseSchema.merge(seguroSchema);
+    } else if (tipoProposta === "cartao_credito") {
+      newSchema = baseSchema.merge(cartaoSchema);
     }
 
     setCurrentSchema(newSchema);
@@ -203,6 +209,11 @@ export default function CreateProposta() {
           valor_cobertura: data.valor_cobertura,
         };
         valor = data.valor_premio;
+      } else if (data.tipo_proposta === "cartao_credito") {
+        detalhes = {
+          limite_desejado: data.limite_desejado,
+        };
+        valor = data.limite_desejado;
       }
 
       // 4. Inserir proposta
@@ -277,6 +288,7 @@ export default function CreateProposta() {
     { value: "credito", label: "Crédito Pessoal" },
     { value: "consorcio", label: "Consórcio" },
     { value: "seguro", label: "Seguro" },
+    { value: "cartao_credito", label: "Cartão de Crédito" },
   ];
 
   const statusOptions: SelectOption[] = [
@@ -548,6 +560,22 @@ export default function CreateProposta() {
                       disabled={submitting}
                       valueAsNumber
                       helperText="Valor total da cobertura"
+                    />
+                  </div>
+                )}
+
+                {tipoProposta === "cartao_credito" && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormInput
+                      name="limite_desejado"
+                      label="Limite Desejado (R$) *"
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      placeholder="0.00"
+                      disabled={submitting}
+                      valueAsNumber
+                      helperText="Valor do limite de crédito desejado"
                     />
                   </div>
                 )}
