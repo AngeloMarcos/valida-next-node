@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { StatCard } from "@/components/StatCard";
@@ -41,11 +41,12 @@ export default function Dashboard() {
     }
   };
 
-  const filters = {
+  // Memorizar filters para evitar recriação a cada render
+  const filters = useMemo(() => ({
     ...getFilterDates(),
     usuarioId,
     produtoId
-  };
+  }), [periodo, usuarioId, produtoId]);
 
   const { metrics, loading } = useDashboardMetrics(filters);
 

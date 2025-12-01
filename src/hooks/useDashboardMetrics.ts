@@ -60,9 +60,15 @@ export function useDashboardMetrics(filters: DashboardFilters) {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Usar dependências primitivas para evitar loop infinito
   useEffect(() => {
     loadMetrics();
-  }, [filters]);
+  }, [
+    filters.startDate.toISOString(),
+    filters.endDate.toISOString(),
+    filters.usuarioId,
+    filters.produtoId
+  ]);
 
   const loadMetrics = async () => {
     try {
