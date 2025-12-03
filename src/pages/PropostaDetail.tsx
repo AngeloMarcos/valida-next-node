@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Edit, FileText, Paperclip, History, CheckSquare } from 'lucide-react';
+import { ArrowLeft, Edit, FileText, Paperclip, History, CheckSquare, Building2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { usePropostas, Proposta } from '@/hooks/usePropostas';
 import { LoadingSpinner } from '@/components/shared';
 import { PropostaChecklist } from '@/components/propostas/PropostaChecklist';
@@ -73,10 +74,18 @@ export default function PropostaDetail() {
               </p>
             </div>
           </div>
-          <Button onClick={() => navigate(`/propostas?edit=${id}`)}>
-            <Edit className="h-4 w-4 mr-2" />
-            Editar
-          </Button>
+          <div className="flex gap-2">
+            <Link to={`/propostas/${id}/bank-integration`}>
+              <Button variant="outline">
+                <Building2 className="h-4 w-4 mr-2" />
+                Análise Bancária
+              </Button>
+            </Link>
+            <Button onClick={() => navigate(`/propostas?edit=${id}`)}>
+              <Edit className="h-4 w-4 mr-2" />
+              Editar
+            </Button>
+          </div>
         </div>
 
         <Card>
