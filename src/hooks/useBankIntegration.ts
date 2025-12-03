@@ -1,6 +1,10 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { mockApi, FlowSummary } from '@/lib/mockApi';
+import { bankIntegrationApi } from '@/lib/apiClient';
+
+// Toggle between mock and real API
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
 export interface BankIntegrationState {
   isLoading: boolean;
@@ -22,7 +26,9 @@ export function useBankIntegration() {
   const loadSupportedBanks = useCallback(async () => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     try {
-      const response = await mockApi.getSupportedBanks();
+      const response = USE_MOCK 
+        ? await mockApi.getSupportedBanks()
+        : await bankIntegrationApi.getSupportedBanks();
       setState(prev => ({
         ...prev,
         supportedBanks: response.data.banks,
@@ -49,7 +55,9 @@ export function useBankIntegration() {
     toast.info('Iniciando análise bancária...');
 
     try {
-      const response = await mockApi.startAuthorizationFlow(proposalId, state.selectedBank);
+      const response = USE_MOCK
+        ? await mockApi.startAuthorizationFlow(proposalId, state.selectedBank)
+        : await bankIntegrationApi.startAuthorizationFlow(proposalId, state.selectedBank);
       setState(prev => ({
         ...prev,
         flowSummary: response.data,
@@ -66,14 +74,18 @@ export function useBankIntegration() {
   const refreshFlowSummary = useCallback(async (proposalId: number) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     try {
-      const response = await mockApi.getFlowSummary(proposalId);
+      const response = USE_MOCK
+        ? await mockApi.getFlowSummary(proposalId)
+        : await bankIntegrationApi.getFlowSummary(proposalId);
+      
+      const flowData = USE_MOCK ? response.data.data : response.data;
       setState(prev => ({
         ...prev,
-        flowSummary: response.data.data,
+        flowSummary: flowData,
         isLoading: false,
       }));
       
-      if (response.data.data.flowStep === 'completed') {
+      if (flowData.flowStep === 'completed') {
         toast.success('Proposta aprovada pelo banco!');
       }
     } catch (err) {
@@ -86,7 +98,9 @@ export function useBankIntegration() {
   const cancelFlow = useCallback(async (proposalId: number) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     try {
-      await mockApi.cancelAuthorizationFlow(proposalId);
+      USE_MOCK
+        ? await mockApi.cancelAuthorizationFlow(proposalId)
+        : await bankIntegrationApi.cancelAuthorizationFlow(proposalId);
       setState(prev => ({
         ...prev,
         flowSummary: null,
@@ -101,7 +115,9 @@ export function useBankIntegration() {
   }, []);
 
   const resetState = useCallback(() => {
-    mockApi.resetFlow();
+    if (USE_MOCK) {
+      mockApi.resetFlow();
+    }
     setState({
       isLoading: false,
       flowSummary: null,
