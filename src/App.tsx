@@ -13,7 +13,6 @@ import Clientes from "./pages/Clientes";
 import Propostas from "./pages/Propostas";
 import KanbanPropostas from "./pages/KanbanPropostas";
 import CreateProposta from "./pages/CreateProposta";
-import PropostaDetail from "./pages/PropostaDetail";
 import PropostaDetalhes from "./pages/PropostaDetalhes";
 import BankIntegration from "./pages/BankIntegration";
 import Bancos from "./pages/Bancos";
@@ -55,9 +54,9 @@ const App = () => (
             <Route path="/propostas" element={<Propostas />} />
             <Route path="/propostas/kanban" element={<KanbanPropostas />} />
             <Route path="/propostas/criar" element={<CreateProposta />} />
-            <Route path="/propostas/:id/detalhes" element={<PropostaDetalhes />} />
             <Route path="/propostas/:proposalId/bank-integration" element={<BankIntegration />} />
-            <Route path="/propostas/:id" element={<PropostaDetail />} />
+            <Route path="/propostas/:id/detalhes" element={<Navigate to="/propostas/:id" replace />} />
+            <Route path="/propostas/:id" element={<PropostaDetalhes />} />
             <Route path="/users" element={<Users />} />
             <Route path="/activity-log" element={<ActivityLog />} />
             <Route path="/renovacoes" element={<Renovacoes />} />
