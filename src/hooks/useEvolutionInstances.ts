@@ -59,13 +59,23 @@ export function useEvolutionInstances() {
           qrcode: true,
         });
 
+        // Extract QR code from response
+        let qrCodeUrl = '';
+        if (evolutionResponse.qrcode) {
+          if (typeof evolutionResponse.qrcode === 'object' && 'base64' in evolutionResponse.qrcode) {
+            qrCodeUrl = evolutionResponse.qrcode.base64 || '';
+          } else if (typeof evolutionResponse.qrcode === 'string') {
+            qrCodeUrl = evolutionResponse.qrcode;
+          }
+        }
+
         const { error } = await supabase.from('whatsapp_instances').insert({
           empresa_id: profile.empresa_id,
           instance_name: evolutionResponse.instance.instanceName,
           instance_id: evolutionResponse.instance.instanceId || evolutionResponse.instance.instanceName,
-          api_key: evolutionResponse.hash?.apikey || import.meta.env.VITE_EVOLUTION_API_KEY,
+          api_key: evolutionResponse.hash?.apikey || 'managed-by-edge-function',
           status: 'pending',
-          qr_code_url: evolutionResponse.qrcode?.base64 || evolutionResponse.qrcode,
+          qr_code_url: qrCodeUrl,
           integration_type: 'WHATSAPP-BAILEYS',
         });
 
