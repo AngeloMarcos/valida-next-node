@@ -2,7 +2,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
+
+// Redirect helper para rotas com parâmetros dinâmicos
+function RedirectToPropostaDetalhes() {
+  const { id } = useParams<{ id: string }>();
+  return <Navigate to={`/propostas/${id}`} replace />;
+}
 import { AuthProvider } from "@/contexts/AuthContext";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -55,7 +61,7 @@ const App = () => (
             <Route path="/propostas/kanban" element={<KanbanPropostas />} />
             <Route path="/propostas/criar" element={<CreateProposta />} />
             <Route path="/propostas/:proposalId/bank-integration" element={<BankIntegration />} />
-            <Route path="/propostas/:id/detalhes" element={<Navigate to="/propostas/:id" replace />} />
+            <Route path="/propostas/:id/detalhes" element={<RedirectToPropostaDetalhes />} />
             <Route path="/propostas/:id" element={<PropostaDetalhes />} />
             <Route path="/users" element={<Users />} />
             <Route path="/activity-log" element={<ActivityLog />} />
